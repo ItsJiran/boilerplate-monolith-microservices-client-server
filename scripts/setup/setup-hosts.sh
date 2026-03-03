@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # --- 1. Load .env di Root ---
-# Pastikan kita mencari file .env relatif terhadap lokasi script ini berada
+# Pastikan kita mencari file .env relatif terhadap root project
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/.env"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+ENV_FILE="$ROOT_DIR/.env"
 
 if [ -f "$ENV_FILE" ]; then
     set -a
@@ -14,14 +15,14 @@ else
     exit 1
 fi
 
-ENV_FILE="$SCRIPT_DIR/.env.devops"
+ENV_FILE="$ROOT_DIR/.env.devops"
 
 if [ -f "$ENV_FILE" ]; then
     set -a
     source "$ENV_FILE"
     set +a
 else
-    echo "❌ Error: File .env tidak ditemukan di $ENV_FILE"
+    echo "❌ Error: File .env.devops tidak ditemukan di $ENV_FILE"
     exit 1
 fi
 

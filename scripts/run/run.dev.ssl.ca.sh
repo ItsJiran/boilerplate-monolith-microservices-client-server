@@ -22,7 +22,7 @@ fi
 set -a; . "$ENV_FILE"; set +a
 
 # --- Konfigurasi ---
-CONTAINER_NAME="citrakuliner-step-ca"
+CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
 CA_NAME="${STEP_CA_NAME:-App Boilerplate CA}"
 
 SAFE_APP_NAME="${APP_NAME:-${APP_URL:-app}}"
@@ -55,12 +55,12 @@ echo "🔧 Menginstall Root CA ke system trust store..."
 
 if command -v update-ca-certificates &>/dev/null; then
   # Debian / Ubuntu
-  sudo cp "$ROOT_CA_LOCAL" /usr/local/share/ca-certificates/citrakuliner-step-ca.crt
+  sudo cp "$ROOT_CA_LOCAL" /usr/local/share/ca-certificates/${APP_SLUG:-app-boilerplate}-step-ca.crt
   sudo update-ca-certificates
   echo "✅ System trust store (Debian/Ubuntu) diperbarui."
 elif command -v update-ca-trust &>/dev/null; then
   # RHEL / Fedora / Arch
-  sudo cp "$ROOT_CA_LOCAL" /etc/pki/ca-trust/source/anchors/citrakuliner-step-ca.crt
+  sudo cp "$ROOT_CA_LOCAL" /etc/pki/ca-trust/source/anchors/${APP_SLUG:-app-boilerplate}-step-ca.crt
   sudo update-ca-trust extract
   echo "✅ System trust store (RHEL/Fedora/Arch) diperbarui."
 else

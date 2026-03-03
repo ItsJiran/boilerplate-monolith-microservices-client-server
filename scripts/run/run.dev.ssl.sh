@@ -22,7 +22,7 @@ fi
 STEP_CA_PORT="${STEP_CA_PORT:-9000}"
 STEP_CA_PROVISIONER="${STEP_CA_PROVISIONER:-admin}"
 STEP_CA_PASSWORD="${STEP_CA_PASSWORD:-changeme}"
-CONTAINER_NAME="citrakuliner-step-ca"
+CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
 # --- Penamaan file ---
@@ -119,10 +119,13 @@ update_env_var "NODE_EXTRA_CA_CERTS" "$ROOT_CA_FILE"
 
 echo ""
 echo "🔐 7. Menyalin file sertifikat ke direktori build kontainer (app-server & app-clients)..."
-cp "$ROOT_CA_FILE" "$ROOT_DIR/app-server/step-ca-public-root.pem"
-cp "$CERT_LOCAL" "$ROOT_DIR/app-server/gen-citra-kuliner.crt"
-cp "$ROOT_CA_FILE" "$ROOT_DIR/app-clients/step-ca-public-root.pem"
-cp "$CERT_LOCAL" "$ROOT_DIR/app-clients/gen-citra-kuliner.crt"
+for BUILD_CTX_DIR in "$ROOT_DIR/app-server" "$ROOT_DIR/app-clients"; do
+  if [[ -d "$BUILD_CTX_DIR" ]]; then
+    cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem"
+    cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt"
+    echo "✅ Disalin ke: $BUILD_CTX_DIR/"
+  fi
+done
 
 echo ""
 echo "✅ BERHASIL! Script Selesai Dijalankan."

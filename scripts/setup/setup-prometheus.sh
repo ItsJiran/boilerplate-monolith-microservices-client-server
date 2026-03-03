@@ -21,10 +21,11 @@ EOF
 # ! ==============================
 # ! HOST INVENTORY
 # ! ip|alias|role|job1,job2
+# ! Ganti IP dan alias sesuai environment Anda
 # ! ==============================
 HOSTS=$(cat <<'EOF'
-10.186.132.12|VPS-Client-Prod|worker-transaction|cadvisor_monitor,node_monitor,nginx_monitor
-10.186.132.196|VPS-Master-Self|master-node|cadvisor_monitor,node_monitor,redis_monitor,nginx_monitor,mariadb_monitor
+192.168.1.10|Worker-Node-1|worker|cadvisor_monitor,node_monitor,nginx_monitor
+192.168.1.20|Master-Node-1|master|cadvisor_monitor,node_monitor,redis_monitor,nginx_monitor,mariadb_monitor
 EOF
 )
 

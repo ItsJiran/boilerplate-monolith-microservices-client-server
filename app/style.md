@@ -1,4 +1,4 @@
-# Matrix App - Design System
+# App Boilerplate - Design System
 
 > Professional, Clean, Material Minimalist Design System
 

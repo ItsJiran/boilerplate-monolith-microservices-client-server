@@ -8,7 +8,7 @@ For **PRODUCTION**, we use **Let's Encrypt** for automatic SSL certificate manag
 
 ## Overview
 
-Step CA is an open-source certificate authority server that provides automated certificate management for local development of the Citra Kuliner application.
+Step CA is an open-source certificate authority server that provides automated certificate management for local development.
 
 ## Features
 
@@ -34,7 +34,7 @@ Add to your `.env` file (or copy from `.env.example`):
 ```bash
 # Step CA Configuration
 STEP_CA_PORT=9000
-STEP_CA_NAME="Citra Kuliner CA"
+STEP_CA_NAME="App Boilerplate CA"
 STEP_CA_DNS="step-ca,localhost"
 STEP_CA_PROVISIONER="admin"
 STEP_CA_PASSWORD="changeme"           # ⚠️ CHANGE THIS IN PRODUCTION!
@@ -159,7 +159,7 @@ NODE_EXTRA_CA_CERTS=/path/to/root_ca.crt
 
 **⚠️ DO NOT use Step CA in production!**
 
-For production deployment, Citra Kuliner uses **Let's Encrypt** for SSL certificates:
+For production deployment, this application uses **Let's Encrypt** for SSL certificates:
 
 ### Why Let's Encrypt for Production?
 
@@ -256,7 +256,7 @@ docker run --rm -v ${APP_SLUG:-app-boilerplate}-step-ca-data:/data -v $(pwd):/ba
 
 3. Verify network exists:
    ```bash
-   docker network inspect citrakuliner-network
+   docker network inspect ${APP_NETWORK:-app_boilerplate_network}
    ```
 
 ### Certificate Verification Failed

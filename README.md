@@ -2,8 +2,7 @@
 
 ### Description : 
 
-App Boilerplate App is a catering management with gis tracking system and payment gateway integrated developed with high end best practice 
-included stress test..
+App Boilerplate is a monolithic full-stack application architecture boilerplate with best practices including Docker orchestration, monitoring, SSL management, and stress testing.
 
 ### How To Run :
 
@@ -49,10 +48,10 @@ To run the portainer service..
 
 
 After that u can visit.
-- citrakuliner.test 
-- api.citrakuliner.test
-- s3.citrakuliner.test
-- grafana.citrakuliner.test
+- myapp.test (sesuaikan APP_URL di .env)
+- api.myapp.test
+- s3.myapp.test
+- monitoring.myapp.test
 
 
 ### NOTE :

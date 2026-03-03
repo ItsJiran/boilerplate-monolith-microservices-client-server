@@ -46,7 +46,7 @@ export STEP_CA_NAME=${STEP_CA_NAME:-"App Boilerplate CA"}
 export STEP_CA_DNS=${STEP_CA_DNS:-"step-ca,localhost"}
 export STEP_CA_PROVISIONER=${STEP_CA_PROVISIONER:-"admin"}
 export STEP_CA_PASSWORD=${STEP_CA_PASSWORD:-"changeme"}
-export STEP_CA_ADMIN=${STEP_CA_ADMIN:-"admin@citrakuliner.test"}
+export STEP_CA_ADMIN=${STEP_CA_ADMIN:-"admin@myapp.test"}
 export STEP_CA_ADDRESS=${STEP_CA_ADDRESS:-":9000"}
 
 # Check if network exists
