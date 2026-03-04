@@ -13,8 +13,8 @@ fi
 
 set -a; . "$ENV_FILE"; set +a
 
-if [[ -z "${APP_URL:-}" ]]; then
-  echo '❌ APP_URL harus ada di .env' >&2
+if [[ -z "${APP_DOMAIN:-}" ]]; then
+  echo '❌ APP_DOMAIN harus ada di .env' >&2
   exit 1
 fi
 
@@ -23,7 +23,7 @@ STEP_CA_PORT="${STEP_CA_PORT:-9000}"
 CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
-SAFE_APP_NAME="${APP_NAME:-$APP_URL}"
+SAFE_APP_NAME="${APP_NAME:-$APP_DOMAIN}"
 SAFE_APP_NAME="${SAFE_APP_NAME// /-}"
 SAFE_APP_NAME="${SAFE_APP_NAME,,}"
 

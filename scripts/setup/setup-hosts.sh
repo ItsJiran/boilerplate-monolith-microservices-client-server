@@ -28,7 +28,7 @@ fi
 
 # --- KONFIGURASI ---
 # Ubah domain di bawah ini sesuai keinginan Anda
-APP_URL="${APP_URL}"
+APP_DOMAIN="${APP_DOMAIN}"
 API_URL="${API_URL}"
 S3_URL="${S3_URL}"
 S3_CONSOLE_URL="${S3_CONSOLE_URL}"
@@ -43,7 +43,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo "🌐 Setup Local Domain: $APP_URL"
+echo "🌐 Setup Local Domain: $APP_DOMAIN"
 
 # 1. Cek apakah user menjalankannya sebagai Root/Sudo
 if [ "$(id -u)" -ne 0 ]; then
@@ -53,19 +53,19 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # 2. Cek apakah domain sudah ada di /etc/hosts
-if grep -q "[[:space:]]$APP_URL" "$HOSTS_FILE"; then
-    echo -e "${YELLOW}[SKIP]${NC} Domain '$APP_URL' sudah ada di $HOSTS_FILE."
+if grep -q "[[:space:]]$APP_DOMAIN" "$HOSTS_FILE"; then
+    echo -e "${YELLOW}[SKIP]${NC} Domain '$APP_DOMAIN' sudah ada di $HOSTS_FILE."
 else
     # 3. Tambahkan domain jika belum ada
-    echo -e "${GREEN}[ADD]${NC} Menambahkan $APP_URL ke $HOSTS_FILE..."
+    echo -e "${GREEN}[ADD]${NC} Menambahkan $APP_DOMAIN ke $HOSTS_FILE..."
     
     # Menambahkan baris baru dan entry host
     echo "" >> "$HOSTS_FILE"
-    echo "$IP $APP_URL" >> "$HOSTS_FILE"
+    echo "$IP $APP_DOMAIN" >> "$HOSTS_FILE"
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}[SUCCESS]${NC} Domain berhasil ditambahkan!"
-        echo "👉 Sekarang Anda bisa akses: http://$APP_URL"
+        echo "👉 Sekarang Anda bisa akses: http://$APP_DOMAIN"
     else
         echo -e "${RED}[FAIL]${NC} Gagal menulis ke $HOSTS_FILE"
     fi
@@ -176,4 +176,20 @@ else
     fi
 fi
 
+echo "🌐 Setup Local Domain: $HMR_URL"
 
+if grep -q "[[:space:]]$HMR_URL" "$HOSTS_FILE"; then
+    echo -e "${YELLOW}[SKIP]${NC} Domain '$HMR_URL' sudah ada di $HOSTS_FILE."
+else
+    echo -e "${GREEN}[ADD]${NC} Menambahkan $HMR_URL ke $HOSTS_FILE..."
+    
+    echo "" >> "$HOSTS_FILE"
+    echo "$IP $HMR_URL" >> "$HOSTS_FILE"
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[SUCCESS]${NC} Domain berhasil ditambahkan!"
+        echo "👉 Sekarang Anda bisa akses: http://$HMR_URL"
+    else
+        echo -e "${RED}[FAIL]${NC} Gagal menulis ke $HOSTS_FILE"
+    fi
+fi

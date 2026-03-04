@@ -4,7 +4,7 @@
 # =========================================================
 server {
     listen 80;
-    server_name {{API_URL}} {{APP_URL}} {{PHPMYADMIN_URL}} {{S3_URL}} {{S3_CONSOLE_URL}} {{GRAFANA_URL}};
+    server_name {{APP_DOMAIN}} {{PHPMYADMIN_URL}} {{S3_URL}} {{S3_CONSOLE_URL}} {{GRAFANA_URL}} {{HMR_URL}};
 
     # Redirect all requests to HTTPS
     return 301 https://$host$request_uri;
@@ -15,7 +15,7 @@ server {
 # =========================================================
 server {
     listen 443 ssl http2;
-    server_name {{API_URL}} *.{{APP_URL}};
+    server_name {{APP_DOMAIN}} *.{{APP_DOMAIN}};
 
     # SSL Configuration (Replace with your actual paths)
     ssl_certificate     {{SSL_CERT_PATH}}; # e.g., /etc/letsencrypt/live/domain.com/fullchain.pem
@@ -44,42 +44,11 @@ server {
 }
 
 # =========================================================
-# 2. FRONTEND SERVER (APP) - HTTPS
-# =========================================================
-server {
-    listen 443 ssl http2;
-    server_name {{APP_URL}} *.{{APP_URL}};
-
-    ssl_certificate     {{SSL_CERT_PATH}};
-    ssl_certificate_key {{SSL_KEY_PATH}};
-    
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    access_log /var/log/nginx/app-boilerplate_frontend_access.log;
-    error_log  /var/log/nginx/app-boilerplate_frontend_error.log warn;
-
-    location / {
-        proxy_pass http://127.0.0.1:{{LOAD_BALANCER_PORT}};
-        
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
-
-        # WebSocket
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-
-# =========================================================
 # 3. PHPMYADMIN SERVER - HTTPS
 # =========================================================
 server {
     listen 443 ssl http2;
-    server_name {{PHPMYADMIN_URL}} *.{{APP_URL}};
+    server_name {{PHPMYADMIN_URL}} *.{{APP_DOMAIN}};
 
     ssl_certificate     {{SSL_CERT_PATH}};
     ssl_certificate_key {{SSL_KEY_PATH}};
@@ -107,7 +76,7 @@ server {
 # =========================================================
 server {
     listen 443 ssl http2;
-    server_name {{S3_URL}} *.{{APP_URL}};
+    server_name {{S3_URL}} *.{{APP_DOMAIN}};
 
     ssl_certificate     {{SSL_CERT_PATH}};
     ssl_certificate_key {{SSL_KEY_PATH}};
@@ -140,7 +109,7 @@ server {
 # =========================================================
 server {
     listen 443 ssl http2;
-    server_name {{S3_CONSOLE_URL}} *.{{APP_URL}};
+    server_name {{S3_CONSOLE_URL}} *.{{APP_DOMAIN}};
 
     ssl_certificate     {{SSL_CERT_PATH}};
     ssl_certificate_key {{SSL_KEY_PATH}};
@@ -173,7 +142,7 @@ server {
 # =========================================================
 server {
     listen 443 ssl http2;
-    server_name {{GRAFANA_URL}} *.{{APP_URL}};
+    server_name {{GRAFANA_URL}} *.{{APP_DOMAIN}};
 
     ssl_certificate     {{SSL_CERT_PATH}};
     ssl_certificate_key {{SSL_KEY_PATH}};
@@ -209,6 +178,34 @@ server {
 
     access_log /var/log/nginx/app-boilerplate_reverb_access.log;
     error_log  /var/log/nginx/app-boilerplate_reverb_error.log warn;
+
+    location / {
+        proxy_pass http://127.0.0.1:{{LOAD_BALANCER_PORT}};
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        # WebSocket
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# =========================================================
+# 8. HMR SERVER - HTTPS
+# =========================================================
+server {
+    listen 443 ssl http2;
+    server_name {{HMR_URL}};
+
+    ssl_certificate     {{SSL_CERT_PATH}};
+    ssl_certificate_key {{SSL_KEY_PATH}};
+
+    access_log /var/log/nginx/app-boilerplate_hmr_access.log;
+    error_log  /var/log/nginx/app-boilerplate_hmr_error.log warn;
 
     location / {
         proxy_pass http://127.0.0.1:{{LOAD_BALANCER_PORT}};

@@ -13,8 +13,8 @@ fi
 
 set -a; . "$ENV_FILE"; set +a
 
-if [[ -z "${APP_URL:-}" ]]; then
-  echo '❌ APP_URL harus ada di .env' >&2
+if [[ -z "${APP_DOMAIN:-}" ]]; then
+  echo '❌ APP_DOMAIN harus ada di .env' >&2
   exit 1
 fi
 
@@ -26,7 +26,7 @@ CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
 # --- Penamaan file ---
-SAFE_APP_NAME="${APP_NAME:-$APP_URL}"
+SAFE_APP_NAME="${APP_NAME:-$APP_DOMAIN}"
 SAFE_APP_NAME="${SAFE_APP_NAME// /-}"
 SAFE_APP_NAME="${SAFE_APP_NAME,,}"
 
@@ -70,18 +70,18 @@ echo ""
 echo "🔐 2. Membuat Server CSR & Private Key lokal (gen-${SAFE_APP_NAME})..."
 # Kumpulkan semua URL dari .env sebagai SAN
 SANS=()
-for VAR in API_URL REVERB_URL S3_URL S3_CONSOLE_URL; do
+for VAR in API_URL REVERB_URL S3_URL S3_CONSOLE_URL HMR_URL; do
   VAL="${!VAR:-}"
   if [[ -n "$VAL" ]]; then
     SANS+=("--san" "$VAL")
   fi
 done
-SANS+=("--san" "$APP_URL")
-SANS+=("--san" "*.$APP_URL")
+SANS+=("--san" "$APP_DOMAIN")
+SANS+=("--san" "*.$APP_DOMAIN")
 SANS+=("--san" "localhost")
 SANS+=("--san" "127.0.0.1")
 
-step-cli certificate create "$APP_URL" "$CSR_LOCAL" "$KEY_LOCAL" \
+step-cli certificate create "$APP_DOMAIN" "$CSR_LOCAL" "$KEY_LOCAL" \
   --csr --insecure --no-password --force "${SANS[@]}"
 
 echo ""
