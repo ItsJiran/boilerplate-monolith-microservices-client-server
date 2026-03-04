@@ -58,13 +58,14 @@ Route::middleware([
         Route::delete('/profile', [ProfileController::class , 'destroy'])->name('profile.destroy');
         Route::get('/settings', [SettingsController::class , 'index'])->name('settings');
 
-        // Test Routes
-        Route::get('/test/db', [TestController::class , 'database'])->name('test.db');
-        Route::get('/test/socket', [TestController::class , 'socket'])->name('test.socket');
-        Route::get('/test/trigger-socket', [TestController::class , 'triggerSocket'])->name('test.trigger_socket');
-        Route::get('/test/notification', [TestController::class , 'notification'])->name('test.notification');
-        Route::post('/test/trigger-notification', [TestController::class , 'triggerNotification'])->name('test.trigger_notification');
-
     });
+
+// Test Routes (made public)
+Route::get('/test/db', [TestController::class , 'database'])->name('test.db');
+Route::get('/test/socket', [TestController::class , 'socket'])->name('test.socket');
+Route::get('/test/trigger-socket', [TestController::class , 'triggerSocket'])->name('test.trigger_socket');
+Route::get('/test/notification', [TestController::class , 'notification'])->name('test.notification');
+Route::post('/test/trigger-notification', [TestController::class , 'triggerNotification'])->name('test.trigger_notification');
+
 
 require __DIR__ . '/auth.php';

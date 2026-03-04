@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
     return (
         <>
-            <Head title="App Boilerplate" />
+            <Head title="Welcome" />
             <div className="bg-gray-50 min-h-screen">
                 {/* Header */}
                 <header className="bg-white border-b border-gray-200">
@@ -12,15 +12,21 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-purple-600 flex items-center justify-center">
                                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h1 className="text-xl font-semibold text-gray-900">App Boilerplate</h1>
-                                    <p className="text-xs text-gray-600">Enterprise Starter Kit</p>
+                                    <h1 className="text-xl font-semibold text-gray-900">Application</h1>
+                                    <p className="text-xs text-gray-600">Starter</p>
                                 </div>
                             </div>
                             <nav className="flex items-center gap-3">
+                                <Link
+                                    href={route('test.db')}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm font-medium transition-colors"
+                                >
+                                    Testing Route
+                                </Link>
                                 {auth.user ? (
                                     <Link
                                         href={route('dashboard')}
@@ -58,17 +64,15 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
-                                Advanced Application Architecture
+                                Welcome to your new application
                             </div>
 
                             <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 mb-6">
-                                Build Enterprise Apps with Confidence
+                                Start Your Next Great Idea
                             </h1>
 
                             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
-                                A robust starter kit featuring Hybrid Monolith Architecture.
-                                Powered by Laravel, Inertia.js, React, and Tailwind CSS.
-                                Ready for scale with multi-tenancy and real-time capabilities.
+                                A simple and clean foundation for your web application. Ready to be customized and scaled.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -110,10 +114,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2">
-                                                Hybrid Monolith
+                                                Fast & Reliable
                                             </h3>
                                             <p className="text-sm text-gray-700">
-                                                Serve Inertia.js web views and JSON API from a single unified codebase.
+                                                Optimized for high performance and reliability.
                                             </p>
                                         </div>
                                     </div>
@@ -130,10 +134,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2">
-                                                Role-Based Access
+                                                Secure Access
                                             </h3>
                                             <p className="text-sm text-gray-700">
-                                                Built-in infrastructure to handle granular user permissions.
+                                                Built-in secure authentication and authorization features.
                                             </p>
                                         </div>
                                     </div>
@@ -150,10 +154,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2">
-                                                Real-time Ecosystem
+                                                Modern Stack
                                             </h3>
                                             <p className="text-sm text-gray-700">
-                                                Laravel Reverb + React Zustand provides reactive updates directly to the UI.
+                                                Leveraging the latest technologies for a smooth developer experience.
                                             </p>
                                         </div>
                                     </div>
@@ -170,17 +174,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 bg-purple-600 flex items-center justify-center">
                                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-900">App Boilerplate</p>
-                                    <p className="text-xs text-gray-600">Laravel v{laravelVersion} (PHP v{phpVersion})</p>
+                                    <p className="text-sm font-semibold text-gray-900">Application</p>
+                                    <p className="text-xs text-gray-600">Built with standard modern tools.</p>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-6 text-sm text-gray-600">
-                                <a href="#" className="hover:text-purple-600 transition-colors">Documentation</a>
-                                <a href="#" className="hover:text-purple-600 transition-colors">GitHub</a>
                             </div>
                         </div>
                     </div>

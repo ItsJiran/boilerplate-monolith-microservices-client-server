@@ -4,7 +4,7 @@ import DashboardPreview from '@/Components/ui/molecules/DashboardPreview';
 import InputGroup from '@/Components/ui/atoms/InputGroup';
 import Button from '@/Components/ui/atoms/Button';
 
-export default function MatrixLogin() {
+export default function Login() {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -13,7 +13,7 @@ export default function MatrixLogin() {
     const submit = (event) => {
         event.preventDefault();
         post(route('login'), {
-            onFinish: () => {},
+            onFinish: () => { },
         });
     };
 
@@ -39,8 +39,8 @@ export default function MatrixLogin() {
                     </svg>
                 </div>
                 <div>
-                    <p className="text-xl font-bold text-gray-900">GOAL</p>
-                    <p className="text-xs text-gray-400">matrix</p>
+                    <p className="text-xl font-bold text-gray-900">APP</p>
+                    <p className="text-xs text-gray-400">admin</p>
                 </div>
             </div>
 
@@ -91,8 +91,8 @@ export default function MatrixLogin() {
 
                 <div className="mt-4">
                     <Link href={route('register')}>
-                        <Button 
-                        className='w-full'
+                        <Button
+                            className='w-full'
                             type="button"
                             variant="white"
                         >

@@ -5,8 +5,8 @@ export default function DashboardPreview() {
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <div className="flex items-start justify-between mb-4">
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">Matrix Dashboard</h3>
-                        <p className="text-sm text-gray-500">Manage your marketing and conversion operations more professionally</p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">Application Dashboard</h3>
+                        <p className="text-sm text-gray-500">Manage your operations more professionally</p>
                     </div>
                     <div className="flex gap-2">
                         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">

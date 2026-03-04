@@ -52,8 +52,8 @@ export default function Sidebar({ activeMenu, setActiveMenu, menuItems, isOpen, 
                             </svg>
                         </div>
                         <div className={`flex flex-col whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'}`}>
-                            <span className="text-lg font-bold text-gray-900 leading-tight">Matrix</span>
-                            <span className="text-[10px] text-gray-400 font-medium leading-none">Analytics</span>
+                            <span className="text-lg font-bold text-gray-900 leading-tight">Application</span>
+                            <span className="text-[10px] text-gray-400 font-medium leading-none">Admin</span>
                         </div>
                     </div>
                     {/* Desktop Toggle Button */}
@@ -79,8 +79,8 @@ export default function Sidebar({ activeMenu, setActiveMenu, menuItems, isOpen, 
                                 onClose?.();
                             }}
                             className={`block w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 overflow-hidden ${activeMenu === item.id
-                                    ? 'bg-purple-50 text-purple-700'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-purple-50 text-purple-700'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                             title={isCollapsed ? item.label : undefined}
                         >

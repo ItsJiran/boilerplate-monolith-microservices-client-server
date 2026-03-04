@@ -5,15 +5,15 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     // Memuat variabel env dari file .env* 
     const env = loadEnv(mode, process.cwd(), '');
-    
+
     // Production detection yang lebih robust
     // 1. mode === 'production' -> dari 'vite build' command
     // 2. VITE_APP_ENV === 'production' -> dari env variable (harus pakai VITE_ prefix)
     // 3. APP_ENV === 'production' -> fallback untuk backwards compatibility
     // 4. NODE_ENV === 'production' -> standard node environment
-    const isProduction = 
-        mode === 'production' || 
-        env.VITE_APP_ENV === 'production' || 
+    const isProduction =
+        mode === 'production' ||
+        env.VITE_APP_ENV === 'production' ||
         env.APP_ENV === 'production' ||
         process.env.NODE_ENV === 'production';
 
@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
             strictPort: true,
             hmr: {
                 protocol: 'wss',
-                host: 'matrix.test',
+                host: 'app.test',
                 clientPort: 5174,
             },
         },

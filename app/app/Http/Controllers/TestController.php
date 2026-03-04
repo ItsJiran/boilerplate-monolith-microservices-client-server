@@ -39,7 +39,8 @@ class TestController extends Controller
     public function triggerSocket(Request $request)
     {
         // For testing we will just broadcast a generic status
-        \App\Events\NotificationUpdated::dispatch($request->user()->id, 999);
+        $userId = $request->user() ? $request->user()->id : 1; // Fallback to ID 1 if public
+        \App\Events\NotificationUpdated::dispatch($userId, 999);
 
         return AppResponse::success('Socket event dispatched');
     }
@@ -57,7 +58,8 @@ class TestController extends Controller
             'type' => 'nullable|string',
         ]);
 
-        $service->create($request->user()->id, [
+        $userId = $request->user() ? $request->user()->id : 1; // Fallback to ID 1 if public
+        $service->create($userId, [
             'type' => $request->input('type', 'info'),
             'title' => $request->input('title'),
             'body' => $request->input('body'),

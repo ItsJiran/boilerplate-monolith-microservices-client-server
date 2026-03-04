@@ -15,7 +15,7 @@ export default function Register() {
     const submit = (event) => {
         event.preventDefault();
         post(route('register'), {
-            onFinish: () => {},
+            onFinish: () => { },
         });
     };
 
@@ -40,8 +40,8 @@ export default function Register() {
                     </svg>
                 </div>
                 <div>
-                    <p className="text-xl font-bold text-gray-900">GOAL</p>
-                    <p className="text-xs text-gray-400">matrix</p>
+                    <p className="text-xl font-bold text-gray-900">APP</p>
+                    <p className="text-xs text-gray-400">admin</p>
                 </div>
             </div>
 
@@ -50,7 +50,7 @@ export default function Register() {
                     Buat Akun Baru
                 </h1>
                 <p className="text-sm text-gray-500">
-                    Mulai sesi Matrix yang aman dan pantau insight secara real-time.
+                    Mulai sesi yang aman dan pantau insight secara real-time.
                 </p>
             </div>
 
@@ -113,7 +113,7 @@ export default function Register() {
                 <div className="mt-4">
                     <Link href={route('login')}>
                         <Button
-                        className='w-full'
+                            className='w-full'
                             type="button"
                             variant="white"
                         >

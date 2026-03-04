@@ -10,7 +10,7 @@ export default function GuestLayout({ children }) {
                         <ApplicationLogo className="h-20 w-20 fill-current text-white" />
                     </Link>
                     <p className="max-w-sm text-sm font-light leading-relaxed text-white/70">
-                        Securely access the Matrix control surface with your
+                        Securely access the application control surface with your
                         credentials. Tremor UI keeps the experience consistent
                         across every auth flow.
                     </p>
