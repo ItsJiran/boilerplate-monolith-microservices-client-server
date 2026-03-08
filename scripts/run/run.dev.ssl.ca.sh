@@ -53,14 +53,15 @@ echo "✅ Root CA tersimpan ke: $ROOT_CA_LOCAL"
 echo ""
 echo "🔧 Menginstall Root CA ke system trust store..."
 
-if command -v update-ca-certificates &>/dev/null; then
+if command update-ca-certificates -v &>/dev/null; then
   # Debian / Ubuntu
-  sudo cp "$ROOT_CA_LOCAL" /usr/local/share/ca-certificates/${APP_SLUG:-app-boilerplate}-step-ca.crt
+  sudo cp "$ROOT_CA_LOCAL" /usr/local/share/ca-certificates/${APP_SLUG:-app-boilerplate}-step-ca.pem
+  sudo cp "$ROOT_CA_LOCAL" /etc/ssl/certs/${APP_SLUG:-app-boilerplate}-step-ca.pem
   sudo update-ca-certificates
   echo "✅ System trust store (Debian/Ubuntu) diperbarui."
-elif command -v update-ca-trust &>/dev/null; then
+elif command update-ca-trust -v &>/dev/null; then
   # RHEL / Fedora / Arch
-  sudo cp "$ROOT_CA_LOCAL" /etc/pki/ca-trust/source/anchors/${APP_SLUG:-app-boilerplate}-step-ca.crt
+  sudo cp "$ROOT_CA_LOCAL" /etc/pki/ca-trust/source/anchors/${APP_SLUG:-app-boilerplate}-step-ca.pem
   sudo update-ca-trust extract
   echo "✅ System trust store (RHEL/Fedora/Arch) diperbarui."
 else

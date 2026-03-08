@@ -12,9 +12,19 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# --- Load APP_SLUG dari .env ---
+DEFAULT_APP_SLUG="app-boilerplate"
+if [ -f .env ]; then
+    ENV_SLUG=$(grep -E '^APP_SLUG=' .env | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
+    [ -n "$ENV_SLUG" ] && DEFAULT_APP_SLUG="$ENV_SLUG"
+elif [ -f .env.example ]; then
+    ENV_SLUG=$(grep -E '^APP_SLUG=' .env.example | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
+    [ -n "$ENV_SLUG" ] && DEFAULT_APP_SLUG="$ENV_SLUG"
+fi
+
 # --- Konfigurasi Target File & Stack (Namespace) ---
 DEFAULT_FILE="docker-compose.yml"
-DEFAULT_STACK="myapp" 
+DEFAULT_STACK="$DEFAULT_APP_SLUG" 
 
 echo -e "${YELLOW}--- Konfigurasi Project ---${NC}"
 read -p "Masukkan nama file (Default: $DEFAULT_FILE): " INPUT_FILE
@@ -48,11 +58,11 @@ SERVICES=(
 
 # --- Daftar Volume ---
 VOLUMES=(
-    "myapp-data"
-    "myapp-mariadb-data"
-    "myapp-redis-data"
-    "myapp-storage"
-    "myapp-minio-data"
+    "${DEFAULT_APP_SLUG}-data"
+    "${DEFAULT_APP_SLUG}-mariadb-data"
+    "${DEFAULT_APP_SLUG}-redis-data"
+    "${DEFAULT_APP_SLUG}-storage"
+    "${DEFAULT_APP_SLUG}-minio-data"
 )
 
 # --- Fungsi Load Environment ---

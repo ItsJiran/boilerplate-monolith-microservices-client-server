@@ -141,7 +141,7 @@ services:
         max-file: "2"     # Maksimal 2 file (total 10MB)
 
   # ---- BACKEND SERVICE
-  server:
+  app:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
@@ -168,7 +168,7 @@ services:
         max-size: "5m"    # Maksimal 5 Megabyte per file
         max-file: "2"     # Maksimal 2 file (total 10MB)
 
-  server-worker:
+  app-worker:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
@@ -196,7 +196,7 @@ services:
         max-size: "5m"    # Maksimal 5 Megabyte per file
         max-file: "2"     # Maksimal 2 file (total 10MB)
 
-  server-socket:
+  app-socket:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
@@ -224,7 +224,7 @@ services:
         max-size: "5m"    # Maksimal 5 Megabyte per file
         max-file: "2"     # Maksimal 2 file (total 10MB)
 
-  server-cron:
+  app-cron:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
