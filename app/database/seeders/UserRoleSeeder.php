@@ -22,19 +22,18 @@ class UserRoleSeeder extends Seeder
             $user = User::where('email', $email)->first();
             $role = Role::where('slug', $roleSlug)->first();
 
-            if (! $user || ! $role) {
+            if (!$user || !$role) {
                 continue;
             }
 
             UserRole::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'role_id' => $role->id,
-                    'tenant_id' => null,
-                ],
-                [
-                    'assigned_at' => now(),
-                ],
+            [
+                'user_id' => $user->id,
+                'role_id' => $role->id,
+            ],
+            [
+                'assigned_at' => now(),
+            ],
             );
         }
     }
@@ -44,7 +43,7 @@ class UserRoleSeeder extends Seeder
         $appUrl = env('APP_URL', 'http://localhost');
         $host = parse_url($appUrl, PHP_URL_HOST);
 
-        if (! $host) {
+        if (!$host) {
             $host = \Illuminate\Support\Str::of($appUrl)
                 ->after('://')
                 ->before('/')
@@ -53,7 +52,7 @@ class UserRoleSeeder extends Seeder
         }
 
         $domain = $host
-            ? \Illuminate\Support\Str::of($host)->lower()->replace('www.', '')->toString()
+            ?\Illuminate\Support\Str::of($host)->lower()->replace('www.', '')->toString()
             : 'example.com';
 
         return $domain;

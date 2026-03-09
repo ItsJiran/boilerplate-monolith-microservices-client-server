@@ -22,7 +22,7 @@ fi
 STEP_CA_PORT="${STEP_CA_PORT:-9000}"
 STEP_CA_PROVISIONER="${STEP_CA_PROVISIONER:-admin}"
 STEP_CA_PASSWORD="${STEP_CA_PASSWORD:-changeme}"
-CONTAINER_NAME="step-ca"
+CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
 # --- Penamaan file ---
@@ -101,8 +101,9 @@ echo "🔐 4. Mengkonfigurasi Nginx SSL (Membutuhkan akses Sudo)..."
 sudo mkdir -p "$SSL_DIR"
 sudo cp "$CERT_LOCAL" "$CERT_FILE"
 sudo cp "$KEY_LOCAL" "$KEY_FILE"
-sudo chown nginx:nginx "$CERT_FILE" "$KEY_FILE" || true
-sudo chmod 640 "$CERT_FILE" "$KEY_FILE"
+# Abaikan error jika user nginx belum ada di host
+sudo chown nginx:nginx "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
+sudo chmod 640 "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
 
 # --- Update .env ---
 update_env_var() {
@@ -122,8 +123,13 @@ echo ""
 echo "🔐 7. Menyalin file sertifikat ke direktori build kontainer (app-server & app-clients)..."
 for BUILD_CTX_DIR in "$ROOT_DIR/app"; do
   if [[ -d "$BUILD_CTX_DIR" ]]; then
-    cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem"
-    cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt"
+    # Fallback aman ke sudo bila file lama terkunci root
+    cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem" 2>/dev/null || sudo cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem"
+    sudo chown "${USER:-$(id -un)}:${USER:-$(id -gn)}" "$BUILD_CTX_DIR/step-ca-public-root.pem" 2>/dev/null || true
+    
+    cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt" 2>/dev/null || sudo cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt"
+    sudo chown "${USER:-$(id -un)}:${USER:-$(id -gn)}" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt" 2>/dev/null || true
+    
     echo "✅ Disalin ke: $BUILD_CTX_DIR/"
   fi
 done

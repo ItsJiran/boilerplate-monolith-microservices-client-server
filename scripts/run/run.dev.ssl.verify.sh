@@ -67,7 +67,8 @@ else
     
     echo ""
     echo "🔍 4. Memverifikasi Sertifikat Server terhadap Root CA Docker..."
-    if step-cli certificate verify "$CERT_LOCAL" --roots "/tmp/verify-root.pem" 2>/dev/null; then
+    if docker run --rm -v "$ROOT_DIR:/workspace" -v "/tmp:/tmp" smallstep/step-cli \
+       step certificate verify "/workspace/$(basename "$CERT_LOCAL")" --roots "/tmp/verify-root.pem" 2>/dev/null; then
        echo "   ✅ Sertifikat VALID ditandatangani oleh Step CA dari Container ini."
     else
        echo "   ❌ SKENARIO GAGAL! Sertifikat ini TIDAK dikenali (Tidak Valid) oleh CA Container ini."
@@ -93,7 +94,8 @@ fi
 
 echo ""
 echo "🔍 6. Rangkuman Isi Sertifikat (step-cli inspect):"
-step-cli certificate inspect "$CERT_LOCAL" --short
+docker run --rm -v "$ROOT_DIR:/workspace" smallstep/step-cli \
+  step certificate inspect "/workspace/$(basename "$CERT_LOCAL")" --short
 
 echo ""
 echo "✅ Proses verifikasi selesai dijalankan."

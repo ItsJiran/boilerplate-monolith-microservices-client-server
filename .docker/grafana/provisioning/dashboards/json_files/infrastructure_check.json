@@ -499,7 +499,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Redis Memory Usage",
+      "title": "App Redis Memory Usage",
       "type": "gauge"
     },
     {
@@ -570,7 +570,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "builder",
-          "expr": "container_memory_usage_bytes{name=\"citra_kuliner_app-mariadb-1\"} / container_spec_memory_limit_bytes{name=\"citra_kuliner_app-mariadb-1\"} * 100",
+          "expr": "container_memory_usage_bytes{name=\"myapp-mariadb-1\"} / container_spec_memory_limit_bytes{name=\"myapp-mariadb-1\"} * 100",
           "hide": false,
           "instant": false,
           "legendFormat": "{{alias}}",
@@ -578,7 +578,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Mysql Memory Usage",
+      "title": "App Mysql Memory Usage",
       "type": "bargauge"
     },
     {
@@ -640,7 +640,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "builder",
-          "expr": "(container_memory_usage_bytes{name=\"citra_kuliner_app-laravel-1\"} * 100) / container_spec_memory_limit_bytes{name=\"citra_kuliner_app-laravel-1\"}",
+          "expr": "(container_memory_usage_bytes{name=\"myapp-laravel-1\"} * 100) / container_spec_memory_limit_bytes{name=\"myapp-laravel-1\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "__auto",
@@ -648,7 +648,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Backend Memory Usage",
+      "title": "App Backend Memory Usage",
       "type": "gauge"
     },
     {
@@ -710,7 +710,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "builder",
-          "expr": "(container_memory_usage_bytes{name=\"citra_kuliner_app-load_balancer-1\"} * 100) / container_spec_memory_limit_bytes{name=\"citra_kuliner_app-load_balancer-1\"}",
+          "expr": "(container_memory_usage_bytes{name=\"myapp-load_balancer-1\"} * 100) / container_spec_memory_limit_bytes{name=\"myapp-load_balancer-1\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "{{alias}}",
@@ -718,7 +718,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Load Balancer Memory Usage",
+      "title": "App Load Balancer Memory Usage",
       "type": "gauge"
     },
     {
@@ -1505,7 +1505,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Redis Connect",
+      "title": "App Redis Connect",
       "type": "timeseries"
     },
     {
@@ -2501,12 +2501,12 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{container=\"citra_kuliner_app-load_balancer-1\"} | json | host = \"api.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
+          "expr": "{container=\"myapp-load_balancer-1\"} | json | host = \"api.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Backend",
+      "title": "App Backend",
       "type": "logs"
     },
     {
@@ -2543,12 +2543,12 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{container=\"citra_kuliner_app-load_balancer-1\"} | json | host = \"s3.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
+          "expr": "{container=\"myapp-load_balancer-1\"} | json | host = \"s3.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner S3",
+      "title": "App S3",
       "type": "logs"
     },
     {
@@ -2585,12 +2585,12 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{container=\"citra_kuliner_app-load_balancer-1\"} | json | host = `citrakuliner.test` | line_format `IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}`",
+          "expr": "{container=\"myapp-load_balancer-1\"} | json | host = `citrakuliner.test` | line_format `IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}`",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Frontend",
+      "title": "App Frontend",
       "type": "logs"
     },
     {
@@ -2627,12 +2627,12 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{container=\"citra_kuliner_app-load_balancer-1\"} | json | host = \"minio.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
+          "expr": "{container=\"myapp-load_balancer-1\"} | json | host = \"minio.citrakuliner.test\" | line_format \"IP: {{.remote_addr}} | Status: {{.status}} | Up_Status: {{.upstream_status}} | Req_Time: {{.request_time}}s | Up_Time: {{.upstream_response_time}}s | Ref: {{.http_referrer}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Minio",
+      "title": "App Minio",
       "type": "logs"
     },
     {
@@ -2715,7 +2715,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Logging File",
+      "title": "App Logging File",
       "type": "gauge"
     },
     {
@@ -2816,7 +2816,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Logging File",
+      "title": "App Logging File",
       "type": "timeseries"
     },
     {
@@ -2917,7 +2917,7 @@
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Logging File",
+      "title": "App Logging File",
       "type": "timeseries"
     },
     {
@@ -2954,12 +2954,12 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{container=\"citra_kuliner_app-laravel-1\"} |= ``",
+          "expr": "{container=\"myapp-laravel-1\"} |= ``",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Laravel App",
+      "title": "App Laravel App",
       "type": "logs"
     },
     {
@@ -2996,12 +2996,12 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{container=\"citra_kuliner_app-redis-1\"} |= ``",
+          "expr": "{container=\"myapp-redis-1\"} |= ``",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Redis",
+      "title": "App Redis",
       "type": "logs"
     },
     {
@@ -3038,12 +3038,12 @@
           },
           "direction": "backward",
           "editorMode": "builder",
-          "expr": "{container=\"citra_kuliner_app-mariadb-1\"} |= ``",
+          "expr": "{container=\"myapp-mariadb-1\"} |= ``",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Citra Kuliner Mariadb",
+      "title": "App Mariadb",
       "type": "logs"
     }
   ],

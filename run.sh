@@ -26,6 +26,20 @@ if [ ! -d "$RUN_SCRIPTS_DIR" ]; then
     exit 1
 fi
 
+# If an argument is provided, run that specific script
+if [ -n "${1:-}" ]; then
+    script_path="$RUN_SCRIPTS_DIR/$1"
+    if [ -f "$script_path" ]; then
+        shift # Remove script name from arguments
+        chmod +x "$script_path"
+        bash "$script_path" "$@"
+        exit $?
+    else
+        echo -e "${RED}Error: Script '$1' not found in $RUN_SCRIPTS_DIR${NC}"
+        exit 1
+    fi
+fi
+
 # List all .sh files in run directory
 echo -e "${YELLOW}Available run scripts:${NC}\n"
 
