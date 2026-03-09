@@ -47,9 +47,8 @@ echo "🌐 Setup Local Domain: $APP_DOMAIN"
 
 # 1. Cek apakah user menjalankannya sebagai Root/Sudo
 if [ "$(id -u)" -ne 0 ]; then
-    echo -e "${RED}[ERROR]${NC} Script ini membutuhkan akses root."
-    echo "👉 Silakan jalankan dengan: sudo ./run.dev.hosts.sh"
-    exit 1
+    echo -e "${YELLOW}🔑 Membutuhkan hak akses Administrator. Masukkan password jika diminta:${NC}"
+    exec sudo "$0" "$@"
 fi
 
 # 2. Cek apakah domain sudah ada di /etc/hosts

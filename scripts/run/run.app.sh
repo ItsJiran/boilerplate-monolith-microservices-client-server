@@ -47,6 +47,7 @@ SERVICES=(
     "phpmyadmin"
     "redis"
     "app"
+    "app-hmr"
     "app-worker"
     "app-socket"
     "app-cron"

@@ -20,7 +20,7 @@ fi
 
 # --- Konfigurasi ---
 STEP_CA_PORT="${STEP_CA_PORT:-9000}"
-CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
+CONTAINER_NAME="step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
 SAFE_APP_NAME="${APP_NAME:-$APP_DOMAIN}"

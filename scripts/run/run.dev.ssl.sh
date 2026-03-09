@@ -22,7 +22,7 @@ fi
 STEP_CA_PORT="${STEP_CA_PORT:-9000}"
 STEP_CA_PROVISIONER="${STEP_CA_PROVISIONER:-admin}"
 STEP_CA_PASSWORD="${STEP_CA_PASSWORD:-changeme}"
-CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
+CONTAINER_NAME="step-ca"
 CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
 
 # --- Penamaan file ---

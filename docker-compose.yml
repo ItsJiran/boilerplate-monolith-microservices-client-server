@@ -145,6 +145,10 @@ services:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
+    user: root
+    command: >
+      sh -c "update-ca-certificates && 
+      su -s /bin/sh www-data -c 'php artisan octane:start --server=frankenphp --host=0.0.0.0 --port=8000 --watch'"
     deploy:
       resources:
         limits:
@@ -160,6 +164,46 @@ services:
       - app_network
     volumes:
       - ./app:/var/www/html:z
+      - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
+    extra_hosts:
+      - "${REVERB_URL}:host-gateway"
+      - "${API_URL}:host-gateway"
+    restart: unless-stopped
+    working_dir: /var/www/html
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"    # Maksimal 5 Megabyte per file
+        max-file: "2"     # Maksimal 2 file (total 10MB)
+
+  app-hmr:
+    build:
+      context: ./app
+      dockerfile: ./Dockerfile.dev
+    user: root
+    command: >
+      sh -c "update-ca-certificates && 
+      npm install && 
+      npm run dev -- --host 0.0.0.0"
+    deploy:
+      resources:
+        limits:
+          cpus: '${SERVER_CPU_LIMIT:-0}'
+          memory: '${SERVER_MEM_LIMIT:-0b}'
+    expose:
+      - "5173"
+    env_file:
+      - ./.env
+      - ./.env.backend
+      - ./.env.devops
+    networks:
+      - app_network
+    volumes:
+      - ./app:/var/www/html:z
+      - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
+    extra_hosts:
+      - "${REVERB_URL}:host-gateway"
+      - "${API_URL}:host-gateway"
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -188,6 +232,7 @@ services:
       - app_network
     volumes:
       - ./app:/var/www/html:z
+      - ./step-ca-public-root.pem:/etc/ssl/certs/step-ca-public-root.pem:ro
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -200,7 +245,7 @@ services:
     build:
       context: ./app
       dockerfile: ./Dockerfile.dev
-    command: php artisan reverb:start
+    command: php artisan reverb:start --host=0.0.0.0 --port=${REVERB_SERVER_PORT} --debug
     deploy:
       resources:
         limits:
@@ -208,6 +253,7 @@ services:
           memory: '${SERVER_MEM_LIMIT:-0b}'
     expose:
       - "${APP_PORT}"
+      - "${REVERB_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -216,6 +262,7 @@ services:
       - app_network
     volumes:
       - ./app:/var/www/html:z
+      - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -242,6 +289,7 @@ services:
       - app_network
     volumes:
       - ./app:/var/www/html:z
+      - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     # restart: unless-stopped # Cron jangan restart policy strict jika exit code 0 (though schedule:work runs forever)
     restart: unless-stopped
     working_dir: /var/www/html

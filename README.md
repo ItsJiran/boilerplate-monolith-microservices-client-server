@@ -323,7 +323,7 @@ docker compose -f infra/docker-compose.devops.exporter.yml up -d
 
 # === STEP CA MANUAL ===
 docker compose -f infra/docker-compose.step-ca.yml up -d
-docker logs -f ${APP_SLUG}-step-ca
+docker logs -f step-ca
 
 # === ARTISAN ===
 docker exec -it ${APP_SLUG}-server php artisan migrate

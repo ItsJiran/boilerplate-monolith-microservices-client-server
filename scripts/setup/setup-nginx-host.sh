@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# --- Cek apakah user menjalankannya sebagai Root/Sudo ---
+if [ "$(id -u)" -ne 0 ]; then
+    echo -e "\033[1;33m🔑 Membutuhkan hak akses Administrator. Masukkan password jika diminta:\033[0m"
+    exec sudo "$0" "$@"
+fi
+
 # --- 1. Load Variable dari .env ---
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"

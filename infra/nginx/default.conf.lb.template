@@ -30,6 +30,12 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
+# Force HTTPS Scheme when behind proxy
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+  default $http_x_forwarded_proto;
+  ''      $scheme;
+}
+
 # --- SERVER BLOCKS ---
 
 server {
@@ -59,7 +65,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
         # WebSocket Support
         proxy_http_version 1.1;
@@ -78,7 +84,7 @@ server {
     client_max_body_size 500M; 
 
     location / {
-        proxy_pass http://${APP_SERVICE}:5173;
+        proxy_pass http://app-hmr:5173;
         proxy_buffering off;
         proxy_request_buffering off;
 
@@ -86,7 +92,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
         # WebSocket Support
         proxy_http_version 1.1;
@@ -112,7 +118,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
         # WebSocket Support
         proxy_http_version 1.1;
@@ -135,7 +141,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
         # WebSocket Support
         proxy_http_version 1.1;
@@ -158,7 +164,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
 
         # WebSocket Support
         proxy_http_version 1.1;
@@ -169,15 +175,29 @@ server {
 
 # --- REVERB ---
 server {
-    listen ${REVERB_PORT};
-    server_name  ${REVERB_URL};
+    # 1. UBAH LISTEN MENJADI 80 agar bisa ditangkap dari Main VPS
+    listen 80; 
+    server_name ${REVERB_URL};
 
     location / {
-        proxy_pass http://server-socket:${REVERB_PORT};
+        # proxy_pass tetap mengarah ke port Reverb di dalam container
+        proxy_pass http://app-socket:${REVERB_SERVER_PORT};
+        
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
+        
+        # 2. Gunakan variabel map yang sudah Anda buat di atas file
+        proxy_set_header Connection $connection_upgrade; 
+        
+        # 3. Gunakan $http_host agar header port asli tidak terpotong
+        proxy_set_header Host $http_host; 
+        
+        # Tambahkan standar header lainnya
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+
         proxy_read_timeout 86400;
+        proxy_send_timeout 86400;
     }
 }

@@ -65,7 +65,7 @@ docker-compose -f docker-compose.step-ca.yml up -d
 
 Get the CA fingerprint:
 ```bash
-docker exec ${APP_SLUG:-app-boilerplate}-step-ca step certificate fingerprint /home/step/certs/root_ca.crt
+docker exec step-ca step certificate fingerprint /home/step/certs/root_ca.crt
 ```
 
 Bootstrap your Step CLI:
@@ -84,7 +84,7 @@ curl -k https://localhost:9000/health
 
 ### View CA Certificates
 ```bash
-docker exec ${APP_SLUG:-app-boilerplate}-step-ca step certificate inspect /home/step/certs/root_ca.crt
+docker exec step-ca step certificate inspect /home/step/certs/root_ca.crt
 ```
 
 ### Request a New Certificate
@@ -99,14 +99,14 @@ step ca renew myapp.crt myapp.key
 
 ### List Active Certificates
 ```bash
-docker exec ${APP_SLUG:-app-boilerplate}-step-ca step ca provisioner list
+docker exec step-ca step ca provisioner list
 ```
 
 ## Management Commands
 
 ### View Logs
 ```bash
-docker logs -f ${APP_SLUG:-app-boilerplate}-step-ca
+docker logs -f step-ca
 ```
 
 ### Stop Server
@@ -232,11 +232,11 @@ DOMAIN=myapp.test
 
 ```bash
 # Backup
-docker run --rm -v ${APP_SLUG:-app-boilerplate}-step-ca-data:/data -v $(pwd):/backup \
+docker run --rm -v step-ca-data:/data -v $(pwd):/backup \
   alpine tar czf /backup/step-ca-backup.tar.gz -C /data .
 
 # Restore
-docker run --rm -v ${APP_SLUG:-app-boilerplate}-step-ca-data:/data -v $(pwd):/backup \
+docker run --rm -v step-ca-data:/data -v $(pwd):/backup \
   alpine tar xzf /backup/step-ca-backup.tar.gz -C /data
 ```
 
@@ -251,7 +251,7 @@ docker run --rm -v ${APP_SLUG:-app-boilerplate}-step-ca-data:/data -v $(pwd):/ba
 
 2. View logs:
    ```bash
-   docker logs ${APP_SLUG:-app-boilerplate}-step-ca
+   docker logs step-ca
    ```
 
 3. Verify network exists:
@@ -289,6 +289,6 @@ docker run --rm -v ${APP_SLUG:-app-boilerplate}-step-ca-data:/data -v $(pwd):/ba
 ## Support
 
 For issues or questions:
-1. Check logs: `docker logs ${APP_SLUG:-app-boilerplate}-step-ca`
+1. Check logs: `docker logs step-ca`
 2. Review [Step CA Troubleshooting Guide](https://smallstep.com/docs/step-ca/troubleshooting)
 3. Contact: Akterma Technology [AT] - ItsJiran

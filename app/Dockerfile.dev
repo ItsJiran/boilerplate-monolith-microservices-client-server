@@ -23,10 +23,12 @@ RUN echo "opcache.enable=1\nopcache.revalidate_freq=0" >> /usr/local/etc/php/con
 # Switch to non-root user
 USER www-data
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/public
+# RUN mkdir -p storage/logs storage/framework/views storage/framework/cache storage/framework/sessions bootstrap/cache
+
+# RUN chown -R www-data:www-data /var/www/html \
+#     && chmod -R 775 /var/www/html/storage \
+#     && chmod -R 775 /var/www/html/bootstrap/cache \
+#     && chmod -R 775 /var/www/html/public
 
 EXPOSE 8000
 CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000", "--watch"]

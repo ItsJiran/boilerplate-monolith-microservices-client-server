@@ -9,14 +9,28 @@ NC='\033[0m' # No Color
 echo "🛠️  Memulai Setup Environment Variables..."
 echo "----------------------------------------"
 
+# --- Cek Flag Override ---
+OVERRIDE=0
+if [[ "${1:-}" == "--force" ]]; then
+    OVERRIDE=1
+fi
+
 # --- Fungsi Reusable untuk Copy File ---
 copy_env() {
     SRC=$1
     DEST=$2
 
-    # 1. Cek apakah file tujuan sudah ada?
-    if [ -f "$DEST" ]; then
+    # 1. Cek apakah file tujuan sudah ada dan tidak di-override?
+    if [ -f "$DEST" ] && [ "$OVERRIDE" -eq 0 ]; then
         echo -e "${YELLOW}[SKIP]${NC} $DEST sudah ada. Tidak ditimpa."
+    
+    # 2. Cek apakah file contoh (example) ada?
+    elif [ -f "$SRC" ]; then
+        if [ -f "$DEST" ] && [ "$OVERRIDE" -eq 1 ]; then
+             echo -e "${YELLOW}[OVERRIDE]${NC} Menimpa $DEST dengan $SRC..."
+        fi
+        cp "$SRC" "$DEST"
+        echo -e "${GREEN}[OK]${NC}   Berhasil membuat $DEST (dari $SRC)"
     
     # 2. Cek apakah file contoh (example) ada?
     elif [ -f "$SRC" ]; then
