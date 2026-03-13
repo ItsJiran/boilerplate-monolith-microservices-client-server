@@ -110,6 +110,19 @@ Atau jalankan `./setup.sh` → pilih `setup-env.sh`.
 | Service | Fungsi |
 |---|---|
 | `grafana` | Dashboard visualisasi |
+
+---
+
+## Deployment Strategy (Enterprise Grade)
+
+Project ini menggunakan strategi **Continuous Delivery (CD)** dengan aturan ketat **"No Source Code on Server"**.
+
+1.  **Build (CI)**: GitHub Actions mem-build Docker Image dari kode (`app/`), lalu menyimpannya di GitHub Container Registry (GHCR).
+2.  **Deploy (CD)**: Developer menjalankan workflow manual ("Trigger Deploy") yang memerintahkan server untuk menarik image dari GHCR.
+3.  **Server State**: Server **TIDAK** memiliki source code `app/`. Server hanya berisi file konfigurasi (`.env`, `docker-compose.yml`) dan scripts. Container berjalan menggunakan immutable image.
+
+Lihat [DEPLOYMENT.md](DEPLOYMENT.md) untuk detail lengkap.
+
 | `prometheus` | Metrics collector |
 | `loki` | Log aggregator |
 

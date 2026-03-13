@@ -1,0 +1,46 @@
+name: 🚀 Manual Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Docker Image Tag (e.g., v1.2.0)'
+        required: true
+        type: string
+        default: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (Optional - only needed if you use local scripts)
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------------------
+      # 1. SSH to Server & Run Deployment
+      # -------------------------------------------------------------
+      - name: Execute Remote Deployment Script
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SERVER_PORT }}
+          script_stop: true
+          # INJECT ENVIRONMENT VARIABLES (SECRETS)
+          # We pass variables as environment to the remote script
+          envs: PROD_DB_PASSWORD,PROD_APP_KEY,PROD_AWS_SECRET
+          script: |
+            # 1. Update Secrets first (via sed/envsubst)
+            cd /var/www/myapp
+            
+            # --- Update .env Secrets ---
+            sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}|g" .env
+            sed -i "s|APP_KEY=.*|APP_KEY=${{ secrets.PROD_APP_KEY }}|g" .env
+            sed -i "s|AWS_SECRET_ACCESS_KEY=.*|AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET }}|g" .env
+
+            # 2. Run Deployment Script
+            # We pass the input version tag to the script
+            # Ensure script is executable
+            chmod +x scripts/deploy/deploy.sh
+            ./scripts/deploy/deploy.sh ${{ github.event.inputs.version_tag }}
