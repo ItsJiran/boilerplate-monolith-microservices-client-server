@@ -158,7 +158,7 @@ jobs:
 
           # 4. Start Step CA
           # Explicitly pass environment from shell or file
-          docker compose --env-file .env -f infra/docker-compose.step-ca.yml up -d
+          ./run.sh run.step-ca.sh
 
           # 4. Generate Dev SSL
           # Wait for Step CA to be healthy (simple sleep or healthcheck)
@@ -174,8 +174,7 @@ jobs:
           # 5. Setup /etc/hosts (Ephemeral DNS)
           # We need to point APP_DOMAIN to 127.0.0.1
           # Extract domain from .env
-          APP_DOMAIN=$(grep APP_DOMAIN .env | cut -d '=' -f2)
-          echo "127.0.0.1 $APP_DOMAIN api.$APP_DOMAIN reverb.$APP_DOMAIN minio.$APP_DOMAIN s3.$APP_DOMAIN" | sudo tee -a /etc/hosts
+          sudo ./setup.sh setup-hosts.sh
 
       - name: Start Containers (App Stack)
         run: |
