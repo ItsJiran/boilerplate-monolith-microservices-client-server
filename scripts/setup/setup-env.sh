@@ -132,25 +132,11 @@ if [ -f "config.json" ]; then
 else
     echo -e "${YELLOW}[SKIP]${NC} config.json not found."
 fi
-copy_env ".env.example.devops" ".env.devops"
 
 echo "----------------------------------------"
 echo -e "✅ Setup selesai!"
 echo -e "👉 Silakan edit file ${YELLOW}.env${NC} dan ${YELLOW}.env.backend${NC} sesuai kebutuhan."
 echo -e "👉 Lalu jalankan: ${GREEN}./dev.sh${NC} (atau docker compose up)"
-        clean_arg="${arg#--}"
-        
-        # Check if it looks like KEY=VALUE
-        if [[ "$clean_arg" == *"="* ]]; then
-            KEY="${clean_arg%%=*}"
-            VALUE="${clean_arg#*=}"
-            
-            # Escape value for sed (escape / and &)
-            SAFE_VALUE=$(echo "$VALUE" | sed 's/[\/&]/\\&/g')
-            
+
 # 3. Setup .env Frontend (Opsional: sesuaikan path jika ada di dalam folder)
 # copy_env "frontend/.env.example" "frontend/.env"
-
-echo "----------------------------------------"
-echo -e "✅ Setup selesai!"
-echo -e "👉 Silakan edit file ${YELLOW}.env${NC} dan ${YELLOW}.env.backend${NC} sesuai kebutuhan."
