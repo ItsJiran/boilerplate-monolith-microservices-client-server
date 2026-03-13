@@ -74,10 +74,19 @@ jobs:
           sudo apt-get install -y nginx
           sudo systemctl stop nginx # Stop to allow config changes
 
-          # 2. Start Step CA
+          # 2. Setup Internal Network
+          # Ensure network exists before starting services (external: true in compose)
+          if [ -f .env ]; then
+            source .env
+          fi
+          APP_NETWORK="${APP_NETWORK:-app_boilerplate_network}"
+          echo "Creating network: $APP_NETWORK"
+          docker network create "$APP_NETWORK" || true
+
+          # 3. Start Step CA
           docker compose -f infra/docker-compose.step-ca.yml up -d
 
-          # 3. Generate Dev SSL
+          # 4. Generate Dev SSL
           # Wait for Step CA to be healthy (simple sleep or healthcheck)
           sleep 5
           chmod +x scripts/run/run.dev.ssl.sh
