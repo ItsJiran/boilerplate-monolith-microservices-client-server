@@ -26,6 +26,43 @@ fi
 DEFAULT_FILE="docker-compose.yml"
 DEFAULT_STACK="$DEFAULT_APP_SLUG" 
 
+# --- Fungsi Load Environment ---
+load_envs() {
+    set -a
+    [ -f .env ] && source .env
+    [ -f .env.backend ] && source .env.backend
+    [ -f .env.devops ] && source .env.devops
+    set +a
+}
+
+# --- Non-Interactive Mode (CI/Scripting) ---
+if [[ -n "$1" ]]; then
+    COMPOSE_FILE="$DEFAULT_FILE"
+    STACK_NAME="$DEFAULT_STACK"
+    export COMPOSE_PROJECT_NAME="$STACK_NAME"
+    
+    ACTION="$1"
+    shift
+    ARGS="$@" # Pass remaining args like --build
+    
+    case "$ACTION" in
+        up)
+            echo -e "${GREEN}[EXEC] Starting all services (Non-Interactive)...${NC}"
+            load_envs
+            docker compose -f "$COMPOSE_FILE" up -d $ARGS
+            ;;
+        down)
+            echo -e "${RED}[EXEC] Stopping all services...${NC}"
+            docker compose -f "$COMPOSE_FILE" down
+            ;;
+        *)
+            echo "Unknown command: $ACTION. Usage: $0 [up|down] [args]"
+            exit 1
+            ;;
+    esac
+    exit 0
+fi
+
 echo -e "${YELLOW}--- Konfigurasi Project ---${NC}"
 read -p "Masukkan nama file (Default: $DEFAULT_FILE): " INPUT_FILE
 COMPOSE_FILE=${INPUT_FILE:-$DEFAULT_FILE}
@@ -65,15 +102,6 @@ VOLUMES=(
     "${DEFAULT_APP_SLUG}-storage"
     "${DEFAULT_APP_SLUG}-minio-data"
 )
-
-# --- Fungsi Load Environment ---
-load_envs() {
-    set -a
-    [ -f .env ] && source .env
-    [ -f .env.backend ] && source .env.backend
-    [ -f .env.devops ] && source .env.devops
-    set +a
-}
 
 # --- Fungsi Cek/Buat Volume (Silently) ---
 check_volumes() {

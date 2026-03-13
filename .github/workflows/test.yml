@@ -77,14 +77,21 @@ jobs:
           # 2. Setup Internal Network
           # Ensure network exists before starting services (external: true in compose)
           if [ -f .env ]; then
+            set -a # automatically export all variables
             source .env
+            set +a
           fi
-          APP_NETWORK="${APP_NETWORK:-app_boilerplate_network}"
-          echo "Creating network: $APP_NETWORK"
-          docker network create "$APP_NETWORK" || true
+          
+          # Default fallback
+          export APP_NETWORK="${APP_NETWORK:-app_boilerplate_network}"
+          echo "Using network: $APP_NETWORK"
+          
+          # Create network if not exists
+          docker network inspect "$APP_NETWORK" >/dev/null 2>&1 || docker network create "$APP_NETWORK"
 
           # 3. Start Step CA
-          docker compose -f infra/docker-compose.step-ca.yml up -d
+          # Explicitly pass environment from shell or file
+          docker compose --env-file .env -f infra/docker-compose.step-ca.yml up -d
 
           # 4. Generate Dev SSL
           # Wait for Step CA to be healthy (simple sleep or healthcheck)
@@ -105,10 +112,9 @@ jobs:
 
       - name: Start Containers (App Stack)
         run: |
-          # Use the Development docker-compose.yml as it builds from source (context: ./app)
-          # We use --build to ensure the code changes in this commit are reflected
-          # IMPORTANT: We MUST run 'load_balancer' as requested
-          docker compose -f docker-compose.yml up -d --build mariadb redis app load_balancer
+          # Use run.app.sh wrapper (non-interactive mode)
+          chmod +x run.sh scripts/run/*.sh
+          ./run.sh run.app.sh up --build
 
       - name: Wait for Services (Database)
         run: |
