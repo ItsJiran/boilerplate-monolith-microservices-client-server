@@ -128,158 +128,155 @@ This project uses a **Continuous Delivery (CD)** strategy with a strict **"No So
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for full details.
 
-| `prometheus` | Metrics collector |
-| `loki` | Log aggregator |
-
 ### Exporters (`infra/docker-compose.devops.exporter.yml`)
 
-| Service | Fungsi |
+| Service | Function |
 |---|---|
-| `node_exporter` | Metrics CPU/RAM/disk host |
-| `redis-exporter` | Metrics Redis |
-| `mariadb-exporter` | Metrics MariaDB |
-| `nginx-exporter` | Metrics Nginx |
-| `cadvisor` | Metrics per container Docker |
+| `node_exporter` | Host CPU/RAM/Disk metrics |
+| `redis-exporter` | Redis metrics |
+| `mariadb-exporter` | MariaDB metrics |
+| `nginx-exporter` | Nginx metrics |
+| `cadvisor` | Docker container metrics |
 | `promtail` | Log shipper → Loki |
 
 ### Tools
 
-| Compose File | Service | Fungsi |
+| Compose File | Service | Function |
 |---|---|---|
-| `docker-compose.portainer.yml` | `portainer` | UI manajemen container |
-| `docker-compose.step-ca.yml` | `step-ca` | CA server untuk SSL development |
+| `docker-compose.portainer.yml` | `portainer` | Container Management UI |
+| `docker-compose.step-ca.yml` | `step-ca` | CA server for SSL development |
 
 ---
 
-## Workflow: Setup Pertama Kali
+## Workflow: First-Time Setup
 
-Jalankan semua langkah berikut secara berurutan.
+Run the following steps in sequence.
 
 ### 1. Setup Environment
 
 ```bash
 ./setup.sh
-# Pilih: setup-env.sh
-# Atau pilih A untuk run semua setup scripts sekaligus
+# Select: setup-env.sh
+# Or select 'A' to run all setup scripts at once
 ```
 
-Akan meng-copy `.env.example` → `.env`, `.env.backend`, `.env.devops`.
-Edit ketiga file tersebut sesuai kebutuhan (minimal: `APP_URL`, `DB_PASSWORD`, `APP_SLUG`).
+This will copy `.env.example` → `.env`, `.env.backend`, `.env.devops`.
+Edit these files as needed (minimally: `APP_URL`, `DB_PASSWORD`, `APP_SLUG`).
 
 ### 2. Setup Local Hosts
 
 ```bash
 sudo ./setup.sh
-# Pilih: setup-hosts.sh
+# Select: setup-hosts.sh
 ```
 
-Menambahkan semua domain dari `.env` (`APP_URL`, `API_URL`, `S3_URL`, `S3_CONSOLE_URL`, `GRAFANA_URL`, `PHPMYADMIN_URL`) ke `/etc/hosts` → `127.0.0.1`.
+Adds all domains from `.env` (`APP_URL`, `API_URL`, `S3_URL`, `S3_CONSOLE_URL`, `GRAFANA_URL`, `PHPMYADMIN_URL`) to `/etc/hosts` → `127.0.0.1`.
 
-### 3. Setup Nginx Virtual Host di Host Machine
+### 3. Setup Nginx Virtual Host on Host Machine
 
 ```bash
 sudo ./setup.sh
-# Pilih: setup-nginx-host.sh
+# Select: setup-nginx-host.sh
 ```
 
-Membuat konfigurasi Nginx di `/etc/nginx/sites-available/` dan symlink ke `sites-enabled/` agar domain lokal diroute ke port load balancer.
+Creates Nginx configuration in `/etc/nginx/sites-available/` and symlinks it to `/etc/nginx/sites-enabled/` so local domains are routed to the load balancer port.
 
 ### 4. Setup SSL Development
 
 ```bash
-# 4a. Jalankan Step CA server
+# 4a. Run Step CA server
 ./run.sh
-# Pilih: run.step-ca.sh
+# Select: run.step-ca.sh
 
-# 4b. Generate SSL certificate untuk domain
+# 4b. Generate SSL certificate for domains
 ./run.sh
-# Pilih: run.dev.ssl.sh
+# Select: run.dev.ssl.sh
 
-# 4c. Install Root CA ke system dan browser
+# 4c. Install Root CA to system and browsers
 ./run.sh
-# Pilih: run.dev.ssl.ca.sh
-# → Install ke: system trust store (apt/rpm/arch), Chrome/Chromium (NSS DB), semua Firefox profile
+# Select: run.dev.ssl.ca.sh
+# → Installs to: system trust store (apt/rpm/arch), Chrome/Chromium (NSS DB), all Firefox profiles
 
-# 4d. Verifikasi SSL
+# 4d. Verify SSL
 ./run.sh
-# Pilih: run.dev.ssl.verify.sh
+# Select: run.dev.ssl.verify.sh
 ```
 
-> **Production**: Gunakan Let's Encrypt. Lihat `infra/LETSENCRYPT.md`.
+> **Production**: Use Let's Encrypt. See `infra/LETSENCRYPT.md`.
 
 ### 5. Setup Monitoring Config
 
 ```bash
 ./setup.sh
-# Pilih: setup-monitoring-config.sh
+# Select: setup-monitoring-config.sh
 ```
 
-Generate `prometheus.yml` dan `promtail.config.yml` dari variabel `.env.devops`.
-Gunakan `infra/monitoring/prometheus.example.yml` sebagai referensi endpoint exporter.
+Generates `prometheus.yml` and `promtail.config.yml` from `.env.devops` variables.
+Uses `infra/monitoring/prometheus.example.yml` as a reference for exporter endpoints.
 
 ---
 
-## Workflow: Menjalankan Aplikasi
+## Workflow: Running the Application
 
-### Jalankan Main App
+### Run Main App
 
 ```bash
 ./run.sh
-# Pilih: run.app.sh
+# Select: run.app.sh
 ```
 
-**Penting untuk Development (Vite/Node):**
-Jika Anda menjalankan `npm install` atau `npm run dev` langsung di Host atau dalam container dan mendapat *permission error*, pastikan ownership/permissions folder sudah sesuai dengan user web server (`www-data`):
+**Important for Development (Vite/Node):**
+If you run `npm install` or `npm run dev` directly on the Host or inside a container and encounter a *permission error*, ensure folder ownership/permissions match the web server user (`www-data`):
 ```bash
 sudo chown -R www-data:www-data app/
 sudo chmod -R 775 app/
-# atau jika di komputer lokal Linux, Anda bisa menambahkan user Anda ke grup www-data:
+# or if on local Linux, add your user to www-data group:
 # sudo usermod -aG www-data $USER
 ```
 
-Script interaktif dengan **checkbox selector** — pilih service yang ingin dioperasikan. Operasi yang tersedia:
+Interactive script with **checkbox selector** — select specific services to operate. Available operations:
 
-| Operasi | Keterangan |
+| Operation | Description |
 |---|---|
-| `up` | Jalankan service |
+| `up` | Start service |
 | `restart` | Restart service |
-| `rebuild` | Rebuild image lalu up |
+| `rebuild` | Rebuild image then up |
 | `force-recreate` | Force recreate container |
 | `reload` | Zero-downtime config reload (Nginx: `nginx -s reload`) |
-| `down` | Matikan dan hapus container |
-| `stop` | Stop tanpa remove container |
+| `down` | Stop and remove container |
+| `stop` | Stop without removing container |
 | `volume` | Manage / recreate volume |
 
-### Jalankan Monitoring
+### Run Monitoring
 
 ```bash
 # Step 1: Exporters
 ./run.sh
-# Pilih: run.devops.exporter.sh
-# Pilih service: node_exporter, redis-exporter, mariadb-exporter, nginx-exporter, cadvisor, promtail
+# Select: run.devops.exporter.sh
+# Select services: node_exporter, redis-exporter, mariadb-exporter, nginx-exporter, cadvisor, promtail
 
 # Step 2: Monitoring stack
 ./run.sh
-# Pilih: run.devops.sh
-# Pilih service: prometheus, loki, grafana
+# Select: run.devops.sh
+# Select services: prometheus, loki, grafana
 ```
 
-### Jalankan Portainer
+### Run Portainer
 
 ```bash
 ./run.sh
-# Pilih: run.portainer.sh
+# Select: run.portainer.sh
 ```
 
 ---
 
-## Akses Layanan
+## Access Services
 
-> Sesuaikan dengan nilai `APP_URL` dan domain lain di `.env`.
+> Adjust according to `APP_URL` and other domains in `.env`.
 
-| Layanan | URL Default |
+| Service | Default URL |
 |---|---|
-| Aplikasi | `https://myapp.test` |
+| Application | `https://myapp.test` |
 | MinIO Console | `https://s3-console.myapp.test` |
 | phpMyAdmin | `https://pma.myapp.test` |
 | Grafana | `https://monitoring.myapp.test` |
@@ -289,16 +286,16 @@ Script interaktif dengan **checkbox selector** — pilih service yang ingin diop
 
 ---
 
-## Fitur Aplikasi Bawaan
+## Built-in App Features
 
-| Fitur | Keterangan |
+| Feature | Description |
 |---|---|
-| Auth Lengkap | Login, Register, Password Reset, Email Verify, Confirm Password |
-| RBAC | Role `superadmin`, `admin`, `user` via middleware `EnsureRole` |
+| Full Auth | Login, Register, Password Reset, Email Verify, Confirm Password |
+| RBAC | Roles `superadmin`, `admin`, `user` via middleware `EnsureRole` |
 | Real-time Notifications | WebSocket via Reverb, mark read / read-all |
-| File Upload | Upload ke MinIO/S3 via `useS3Upload` hook |
-| Profile Management | Edit info, ganti password, hapus akun |
-| Dashboard | Charts, stat cards, filter periode |
+| File Upload | Upload to MinIO/S3 via `useS3Upload` hook |
+| Profile Management | Edit info, change password, delete account |
+| Dashboard | Charts, stat cards, period filtering |
 | Excel Export | via Maatwebsite Excel |
 | Queue Worker | Async job processing via Redis |
 | Scheduler | Cron tasks via `schedule:work` |
@@ -307,12 +304,12 @@ Script interaktif dengan **checkbox selector** — pilih service yang ingin diop
 
 ## SSL Certificate Strategy
 
-| Env | Metode | Script |
+| Env | Method | Script |
 |---|---|---|
-| Development | Step CA (self-signed, trusted lokal) | `run.step-ca.sh` → `run.dev.ssl.sh` → `run.dev.ssl.ca.sh` |
-| Production | Let's Encrypt (trusted publik) | Lihat `infra/LETSENCRYPT.md` |
+| Development | Step CA (self-signed, locally trusted) | `run.step-ca.sh` → `run.dev.ssl.sh` → `run.dev.ssl.ca.sh` |
+| Production | Let's Encrypt (publicly trusted) | See `infra/LETSENCRYPT.md` |
 
-File SSL yang di-generate disimpan di root project dengan prefix `gen-`:
+Generated SSL files are stored in the project root with prefix `gen-`:
 - `gen-<app-name>.crt` — certificate
 - `gen-<app-name>.key` — private key
 - `gen-<app-name>.csr` — certificate signing request
@@ -323,17 +320,17 @@ File SSL yang di-generate disimpan di root project dengan prefix `gen-`:
 ## Quick Commands Cheatsheet
 
 ```bash
-# === SETUP (jalankan sekali) ===
-./setup.sh                           # Menu interaktif setup scripts
-# pilih A untuk run semua sekaligus
+# === SETUP (run once) ===
+./setup.sh                           # Interactive setup scripts menu
+# select A to run all at once
 
 # === RUN APP ===
-./run.sh                             # Menu interaktif run scripts
+./run.sh                             # Interactive run scripts menu
 
 # === DOCKER MANUAL ===
-docker compose up -d                 # Jalankan semua service main app
-docker compose down                  # Matikan semua service
-docker compose logs -f server        # Lihat log Laravel
+docker compose up -d                 # Start all main app services
+docker compose down                  # Stop all services
+docker compose logs -f server        # View Laravel logs
 
 # === MONITORING MANUAL ===
 docker compose -f infra/docker-compose.devops.yml up -d
@@ -354,16 +351,16 @@ docker exec -it ${APP_SLUG}-server php artisan tinker
 
 ## Notes
 
-- Semua service memiliki resource limit CPU/Memory via `deploy.resources.limits` — set di `.env.devops`
+- All services have CPU/Memory resource limits via `deploy.resources.limits` — set in `.env.devops`
 - Log rotation: max `5MB × 2 file` per container (json-file driver)
-- Docker network bersifat `external` — dibuat manual atau otomatis oleh run script
-- Variable `APP_SLUG` digunakan sebagai prefix nama container, volume, dan network
-- Setup scripts bisa dijalankan individual atau semua sekaligus (`./setup.sh` → `A`)
-- Run scripts memiliki checkbox interaktif: pilih service spesifik tanpa edit compose file
+- Docker networks are `external` — created manually or automatically by run scripts
+- The `APP_SLUG` variable is used as a prefix for container names, volumes, and networks
+- Setup scripts can be run individually or all at once (`./setup.sh` → `A`)
+- Run scripts feature interactive checkboxes: select specific services without editing compose files
 
 ---
 
 > Further reading:
-> - `infra/STEP-CA.md` — SSL development dengan Step CA
-> - `infra/LETSENCRYPT.md` — SSL production dengan Let's Encrypt
-> - `infra/ENV-FILE-CONFIG.md` — Panduan lengkap environment variables
+> - `infra/STEP-CA.md` — SSL development with Step CA
+> - `infra/LETSENCRYPT.md` — SSL production with Let's Encrypt
+> - `infra/ENV-FILE-CONFIG.md` — Complete guide to environment variables

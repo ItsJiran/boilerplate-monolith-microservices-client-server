@@ -35,7 +35,7 @@ jobs:
           chmod +x setup.sh scripts/setup/*.sh
           
           # 1. Generate Base Configs (Syncs from config.json)
-          ./setup.sh setup-env.sh
+          ./setup.sh setup-env.sh --force
           
           # 2. Inject CI/Testing Specific Variables
           # This mimics the "Secret Injection" step in deploy.sh
