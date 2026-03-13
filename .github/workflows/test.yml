@@ -27,69 +27,103 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Environment Files
+      # -------------------------------------------------------------
+      # 1. Setup Environment (Mimics Deployment Flow)
+      # -------------------------------------------------------------
+      - name: Setup Configuration
         run: |
-          # Copy .env.example
-          if [ -f .env.example ]; then cp .env.example .env; fi
-          if [ -f .env.example.backend ]; then cp .env.example.backend .env.backend; fi
-          if [ -f .env.example.devops ]; then cp .env.example.devops .env.devops; fi
+          chmod +x setup.sh scripts/setup/*.sh
+          
+          # 1. Generate Base Configs (Syncs from config.json)
+          ./setup.sh setup-env.sh
+          
+          # 2. Inject CI/Testing Specific Variables
+          # This mimics the "Secret Injection" step in deploy.sh
+          echo "👉 Injecting CI Testing configurations..."
+          
+          # Update .env (Main)
+          sed -i "s|^APP_ENV=.*|APP_ENV=testing|" .env
+          sed -i "s|^APP_DEBUG=.*|APP_DEBUG=true|" .env
+          
+          # Update .env.backend (Database & Redis)
+          sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env.backend
+          sed -i "s|^DB_HOST=.*|DB_HOST=mariadb|" .env.backend
+          sed -i "s|^DB_PORT=.*|DB_PORT=3306|" .env.backend
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ env.DB_DATABASE }}|" .env.backend
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ env.DB_USERNAME }}|" .env.backend
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ env.DB_PASSWORD }}|" .env.backend
+          sed -i "s|^MARIADB_ROOT_PASSWORD=.*|MARIADB_ROOT_PASSWORD=${{ env.DB_ROOT_PASSWORD }}|" .env.backend
+          
+          sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" .env.backend
+          sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=redispassword|" .env.backend
+          
+          # Append Docker Tag (Required for Compose)
+          if ! grep -q "DOCKER_IMAGE_TAG=" .env; then
+            echo "DOCKER_IMAGE_TAG=ci-build" >> .env
+          else
+            sed -i "s|^DOCKER_IMAGE_TAG=.*|DOCKER_IMAGE_TAG=ci-build|" .env
+          fi
 
-          # Set specific testing environment variables
-          # We can use sed to replace or just append
-          echo "" >> .env
-          echo "APP_ENV=testing" >> .env
-          
-          # Configure Backend Environment for Testing
-          echo "" >> .env.backend
-          echo "DB_CONNECTION=mysql" >> .env.backend
-          echo "DB_HOST=mariadb" >> .env.backend
-          echo "DB_PORT=3306" >> .env.backend
-          echo "DB_DATABASE=${{ env.DB_DATABASE }}" >> .env.backend
-          echo "DB_USERNAME=${{ env.DB_USERNAME }}" >> .env.backend
-          echo "DB_PASSWORD=${{ env.DB_PASSWORD }}" >> .env.backend
-          echo "MARIADB_ROOT_PASSWORD=${{ env.DB_ROOT_PASSWORD }}" >> .env.backend
-          
-          # Ensure Redis is configured
-          echo "REDIS_HOST=redis" >> .env.backend
-          echo "REDIS_PASSWORD=redispassword" >> .env.backend
-          
-          # Ensure Docker Image Tag is set (needed for docker-compose)
-          echo "DOCKER_IMAGE_TAG=latest" >> .env
-
-      - name: Start Containers (Ephemeral Environment)
+      # -------------------------------------------------------------
+      # 2. Start Infrastructure (Docker Compose)
+      # -------------------------------------------------------------
+      - name: Start Services (Step CA & Nginx Host)
         run: |
-          # Docker Compose needs to build the app image first since we are in CI
-          # and the image might not exist locally. We build locally for testing.
-          docker compose up -d mariadb redis app
+          # 1. Install Nginx (Host/VPS Simulation)
+          sudo apt-get update
+          sudo apt-get install -y nginx
+          sudo systemctl stop nginx # Stop to allow config changes
+
+          # 2. Start Step CA
+          docker compose -f infra/docker-compose.step-ca.yml up -d
+
+          # 3. Generate Dev SSL
+          # Wait for Step CA to be healthy (simple sleep or healthcheck)
+          sleep 5
+          chmod +x scripts/run/run.dev.ssl.sh
+          ./run.sh run.dev.ssl.sh
+
+          # 4. Setup Host Nginx (Requires Sudo)
+          chmod +x scripts/setup/setup-nginx-host.sh
+          # The script checks for sudo internally, but in CI we run as user 'runner', so use sudo
+          sudo ./setup.sh setup-nginx-host.sh
+
+          # 5. Setup /etc/hosts (Ephemeral DNS)
+          # We need to point APP_DOMAIN to 127.0.0.1
+          # Extract domain from .env
+          APP_DOMAIN=$(grep APP_DOMAIN .env | cut -d '=' -f2)
+          echo "127.0.0.1 $APP_DOMAIN api.$APP_DOMAIN reverb.$APP_DOMAIN minio.$APP_DOMAIN s3.$APP_DOMAIN" | sudo tee -a /etc/hosts
+
+      - name: Start Containers (App Stack)
+        run: |
+          # Use the Development docker-compose.yml as it builds from source (context: ./app)
+          # We use --build to ensure the code changes in this commit are reflected
+          # IMPORTANT: We MUST run 'load_balancer' as requested
+          docker compose -f docker-compose.yml up -d --build mariadb redis app load_balancer
 
       - name: Wait for Services (Database)
         run: |
           echo "Waiting for MariaDB to be ready..."
-          # Wait until MariaDB responds to ping
-          # Retry loop 20 times with 3s sleep
-          for i in {1..20}; do
+          for i in {1..30}; do
             if docker compose exec -T mariadb mariadb-admin ping -h localhost -u root -p${{ env.DB_ROOT_PASSWORD }} --silent; then
-                echo "MariaDB is up!"
+                echo "✅ MariaDB is up!"
                 break
             fi
-            echo "Waiting..."
-            sleep 3
+            echo "⏳ Waiting for Database..."
+            sleep 2
           done
 
       - name: Setup Database (Testing)
         run: |
-          # Create testing database if not exists (using root)
+          # Create testing database
           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ env.DB_DATABASE }};"
           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ env.DB_DATABASE }}.* TO '${{ env.DB_USERNAME }}'@'%';"
           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
 
-      - name: Run Migrations (Optional)
+      # -------------------------------------------------------------
+      # 3. Execute Tests (Using run.sh -> scripts/run/test.sh)
+      # -------------------------------------------------------------
+      - name: Run Feature Tests
         run: |
-           # Running migration is usually part of tests (RefreshDatabase trait)
-           # But sometimes needed explicitly
-           docker compose exec -T app php artisan migrate --force
-
-      - name: Run Tests
-        run: |
-          chmod +x test.sh
-          ./test.sh
+          chmod +x run.sh scripts/run/*.sh
+          ./run.sh test.sh
