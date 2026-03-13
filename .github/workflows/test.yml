@@ -207,4 +207,10 @@ jobs:
       - name: Run Feature Tests
         run: |
           chmod +x run.sh scripts/run/*.sh
+
+          # add docker logs for debugging if test.sh fails (common issues: DB connection, missing env vars, etc.)
+          # We can capture logs before running tests for better debugging
+          echo "📋 Container Logs (Before Tests):"
+          docker compose logs          
+
           ./run.sh test.sh
