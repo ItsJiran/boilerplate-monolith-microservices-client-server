@@ -165,6 +165,7 @@ jobs:
           sleep 5
           chmod +x scripts/run/run.dev.ssl.sh
           ./run.sh run.dev.ssl.sh
+          ./run.sh run.dev.ssl.ca.sh
 
           # 4. Setup Host Nginx (Requires Sudo)
           chmod +x scripts/setup/setup-nginx-host.sh

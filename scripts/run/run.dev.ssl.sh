@@ -108,10 +108,24 @@ sudo chmod 640 "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
 # --- Update .env ---
 update_env_var() {
   local key="$1" value="$2"
+  
+  # 1. Cek apakah key sudah ada
   if grep -qE "^${key}=" "$ENV_FILE"; then
+    # REPLACE MODE
+    # Coba sebagai user biasa dulu karena .env ada di user space
+    sed -i -E "s#^${key}=.*#${key}=${value}#" "$ENV_FILE" 2>/dev/null || \
     sudo sed -i -E "s#^${key}=.*#${key}=${value}#" "$ENV_FILE"
   else
-    echo "${key}=${value}" | sudo tee -a "$ENV_FILE" >/dev/null
+    # APPEND MODE
+    # Pastikan file berakhir dengan newline agar tidak menimpa baris terakhir
+    if [ -w "$ENV_FILE" ]; then
+         if [ -n "$(tail -c1 "$ENV_FILE")" ]; then echo "" >> "$ENV_FILE"; fi
+         echo "${key}=${value}" >> "$ENV_FILE"
+    else
+         # Fallback sudo: Cek last char via sudo tail
+         if [ -n "$(sudo tail -c1 "$ENV_FILE")" ]; then echo "" | sudo tee -a "$ENV_FILE" >/dev/null; fi
+         echo "${key}=${value}" | sudo tee -a "$ENV_FILE" >/dev/null
+    fi
   fi
 }
 
