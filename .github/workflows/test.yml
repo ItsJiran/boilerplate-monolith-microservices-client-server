@@ -158,7 +158,7 @@ jobs:
 
           # 4. Start Step CA
           # Explicitly pass environment from shell or file
-          ./run.sh run.step-ca.sh
+          ./run.sh run.step-ca.sh --yes
 
           # 4. Generate Dev SSL
           # Wait for Step CA to be healthy (simple sleep or healthcheck)

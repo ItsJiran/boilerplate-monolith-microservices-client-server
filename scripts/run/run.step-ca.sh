@@ -90,13 +90,18 @@ if [ "$STEP_CA_PASSWORD" = "changeme" ]; then
     echo ""
 fi
 
-# Confirmation prompt
-echo -e "${YELLOW}Start Step CA server? [y/N]:${NC} "
-read -r response
+# Skip confirmation if --yes or -y argument is provided
+if [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]]; then
+    echo -e "${GREEN}Running in non-interactive mode. Proceeding...${NC}"
+else
+    # Confirmation prompt
+    echo -e -n "${YELLOW}Start Step CA server? [y/N]:${NC} "
+    read -r response
 
-if [[ ! "$response" =~ ^[Yy]$ ]]; then
-    echo -e "${BLUE}Cancelled.${NC}"
-    exit 0
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+        echo -e "${BLUE}Cancelled.${NC}"
+        exit 0
+    fi
 fi
 
 echo ""
