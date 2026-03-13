@@ -134,20 +134,10 @@ else
 fi
 copy_env ".env.example.devops" ".env.devops"
 
-# --- 3. Override Dynamic Variables (Arguments) ---
-# Argument Format: KEY=VALUE (e.g. DB_PASSWORD=secret or --DB_PASSWORD=secret)
-echo
-echo "🔄 Checking for manual overrides (arguments)..."
-
-# Collect arguments passed to script
-if [ $# -eq 0 ]; then
-    echo -e "${YELLOW}[SKIP]${NC} No manual override arguments provided."
-else
-    # Files to check
-    ENV_FILES=(".env" ".env.backend" ".env.devops")
-    
-    for arg in "$@"; do
-        # Remove leading -- if present
+echo "----------------------------------------"
+echo -e "✅ Setup selesai!"
+echo -e "👉 Silakan edit file ${YELLOW}.env${NC} dan ${YELLOW}.env.backend${NC} sesuai kebutuhan."
+echo -e "👉 Lalu jalankan: ${GREEN}./dev.sh${NC} (atau docker compose up)"
         clean_arg="${arg#--}"
         
         # Check if it looks like KEY=VALUE
@@ -158,21 +148,6 @@ else
             # Escape value for sed (escape / and &)
             SAFE_VALUE=$(echo "$VALUE" | sed 's/[\/&]/\\&/g')
             
-            echo "   -> Setting $KEY..."
-            
-            for ENV_FILE in "${ENV_FILES[@]}"; do
-                if [ -f "$ENV_FILE" ]; then
-                    # Check if key exists in file before trying to replace
-                    if grep -q "^${KEY}=" "$ENV_FILE"; then
-                        sed -i "s|^${KEY}=.*|${KEY}=${SAFE_VALUE}|" "$ENV_FILE"
-                    fi
-                fi
-            done
-        fi
-    done
-    echo -e "${GREEN}[OK]${NC}   Arguments processed."
-fi
-
 # 3. Setup .env Frontend (Opsional: sesuaikan path jika ada di dalam folder)
 # copy_env "frontend/.env.example" "frontend/.env"
 

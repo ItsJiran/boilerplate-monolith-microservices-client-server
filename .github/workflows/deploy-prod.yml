@@ -27,20 +27,31 @@ jobs:
           key: ${{ secrets.PROD_SSH_KEY }}
           port: ${{ secrets.PROD_SERVER_PORT }}
           script_stop: true
-          # INJECT ENVIRONMENT VARIABLES (SECRETS)
-          # We pass variables as environment to the remote script
-          envs: PROD_DB_PASSWORD,PROD_APP_KEY,PROD_AWS_SECRET
           script: |
-            # 1. Update Secrets first (via sed/envsubst)
+            # 1. Update Project Files
+            # Assumes Git sparse-checkout is used, or files (scripts/infra) are SCP'd previously.
+            # If using git sparse-checkout:
             cd /var/www/myapp
+            # git pull origin main (Ensure this only pulls scripts/infra if using sparse)
             
-            # --- Update .env Secrets ---
-            sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}|g" .env
-            sed -i "s|APP_KEY=.*|APP_KEY=${{ secrets.PROD_APP_KEY }}|g" .env
-            sed -i "s|AWS_SECRET_ACCESS_KEY=.*|AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET }}|g" .env
-
-            # 2. Run Deployment Script
-            # We pass the input version tag to the script
-            # Ensure script is executable
+            # 2. Run Deploy Script with injected secrets
+            # We pass all sensitive production variables as arguments to the script
+            # which will inject them into the .env files.
+            
             chmod +x scripts/deploy/deploy.sh
-            ./scripts/deploy/deploy.sh ${{ github.event.inputs.version_tag }}
+            
+            ./scripts/deploy/deploy.sh ${{ github.event.inputs.version_tag }} \
+              --DOCKER_IMAGE_NAME=ghcr.io/${{ github.repository }} \
+              --APP_ENV=production \
+              --APP_DEBUG=false \
+              --APP_KEY=${{ secrets.PROD_APP_KEY }} \
+              --APP_URL=${{ secrets.PROD_APP_URL }} \
+              --DB_ROOT_PASSWORD=${{ secrets.PROD_DB_ROOT_PASSWORD }} \
+              --DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }} \
+              --REDIS_PASSWORD=${{ secrets.PROD_REDIS_PASSWORD }} \
+              --AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }} \
+              --AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }} \
+              --REVERB_APP_ID=${{ secrets.PROD_REVERB_APP_ID }} \
+              --REVERB_APP_KEY=${{ secrets.PROD_REVERB_APP_KEY }} \
+              --REVERB_APP_SECRET=${{ secrets.PROD_REVERB_APP_SECRET }} \
+              --GRAFANA_ADMIN_PASSWORD=${{ secrets.PROD_GRAFANA_ADMIN_PASSWORD }}

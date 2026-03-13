@@ -1,6 +1,6 @@
 # App Boilerplate — Monolith Full-Stack Architecture
 
-> Laravel 12 + React (Inertia.js) + Docker — production-grade boilerplate dengan monitoring, SSL, real-time, dan object storage siap pakai.
+> Laravel 12 + React (Inertia.js) + Docker — Production-grade boilerplate with integrated monitoring, SSL, real-time capabilities, and S3-compatible object storage.
 >
 > Developed by **Akterma Technology [AT]** — ItsJiran | `2026`
 
@@ -8,7 +8,7 @@
 
 ## Tech Stack
 
-| Layer | Teknologi |
+| Layer | Technology |
 |---|---|
 | Backend | Laravel 12, PHP 8.2+, FrankenPHP, Laravel Octane |
 | Frontend | React (JSX), Inertia.js, Vite, Tailwind CSS |
@@ -25,13 +25,13 @@
 
 ---
 
-## Struktur Direktori
+## Directory Structure
 
 ```
 .
-├── app/                         # Aplikasi Laravel
+├── app/                         # Laravel Application
 │   ├── app/
-│   │   ├── Http/Controllers/    # Controller (thin layer)
+│   │   ├── Http/Controllers/    # Controllers (thin layer)
 │   │   ├── Services/            # Business logic per domain
 │   │   │   ├── AccessControl/
 │   │   │   ├── Admin/
@@ -50,7 +50,7 @@
 │       ├── Hooks/               # Custom React hooks
 │       ├── Stores/              # Zustand state stores
 │       └── Lib/                 # utils, enums, authRoles, routes
-├── infra/                       # Infrastruktur Docker
+├── infra/                       # Docker Infrastructure
 │   ├── docker-compose.devops.yml
 │   ├── docker-compose.devops.exporter.yml
 │   ├── docker-compose.portainer.yml
@@ -58,32 +58,33 @@
 ├── scripts/
 │   ├── setup/                   # One-time setup scripts
 │   └── run/                     # Operational run scripts
-├── docker-compose.yml           # Main app stack
-├── setup.sh                     # Entry point: menu setup scripts
-└── run.sh                       # Entry point: menu run scripts
+├── docker-compose.yml           # Main app stack (Development)
+├── docker-compose.prod.yml      # Main app stack (Production Artifacts)
+├── setup.sh                     # Entry point: setup scripts
+└── run.sh                       # Entry point: run scripts
 ```
 
 ---
 
 ## Environment Files
 
-Project menggunakan 3 env file terpisah, semua di root project:
+The project uses 3 separate env files located in the project root:
 
-| File | Isi |
+| File | Content |
 |---|---|
-| `.env` | Config utama: APP_URL, ports, APP_SLUG, SSL, network |
-| `.env.backend` | Config Laravel: DB, Redis, Mail, S3, Sanctum, Reverb |
-| `.env.devops` | Config monitoring: Grafana, Prometheus, Loki, resource limits |
+| `.env` | Main Config: APP_URL, ports, APP_SLUG, SSL, network |
+| `.env.backend` | Laravel Config: DB, Redis, Mail, S3, Sanctum, Reverb |
+| `.env.devops` | Monitoring Config: Grafana, Prometheus, Loki, resource limits |
 
-Copy dari contoh:
+Copy from example files:
 ```bash
 cp .env.example .env
 cp .env.example.backend .env.backend
 cp .env.example.devops .env.devops
 ```
-Atau jalankan `./setup.sh` → pilih `setup-env.sh`.
+Or run `./setup.sh` → select `setup-env.sh`.
 
-> Lihat `infra/ENV-FILE-CONFIG.md` untuk penjelasan lengkap tiap variabel.
+> See `infra/ENV-FILE-CONFIG.md` for a complete explanation of each variable.
 
 ---
 
@@ -91,37 +92,41 @@ Atau jalankan `./setup.sh` → pilih `setup-env.sh`.
 
 ### Main App (`docker-compose.yml`)
 
-| Service | Fungsi |
+| Service | Function |
 |---|---|
-| `mariadb` | Database utama |
-| `db-init` | One-shot: buat database & user saat pertama kali |
+| `mariadb` | Main Database |
+| `db-init` | One-shot service: creates database & user on first run |
 | `redis` | Cache + Queue broker |
 | `server` | Laravel app (FrankenPHP/Octane) |
 | `server-worker` | `php artisan queue:work` — async job processor |
 | `server-socket` | `php artisan reverb:start` — WebSocket server |
 | `server-cron` | `php artisan schedule:work` — cron scheduler |
-| `load_balancer` | Nginx, expose port ke host |
-| `minio` | Object storage S3-compatible |
-| `createbuckets` | One-shot: auto-create bucket MinIO |
-| `phpmyadmin` | UI manajemen database |
+| `load_balancer` | Nginx, exposes ports to host |
+| `minio` | S3-compatible object storage |
+| `createbuckets` | One-shot: auto-create MinIO buckets |
+| `phpmyadmin` | DB management UI |
 
 ### Monitoring (`infra/docker-compose.devops.yml`)
 
-| Service | Fungsi |
+| Service | Function |
 |---|---|
-| `grafana` | Dashboard visualisasi |
+| `grafana` | Visualization Dashboard |
+| `prometheus` | Metrics Collector |
+| `loki` | Log Aggregation System |
+| `promtail` | Log Shipping Agent |
+| `node_exporter` | Host Metrics Exporter |
 
 ---
 
 ## Deployment Strategy (Enterprise Grade)
 
-Project ini menggunakan strategi **Continuous Delivery (CD)** dengan aturan ketat **"No Source Code on Server"**.
+This project uses a **Continuous Delivery (CD)** strategy with a strict **"No Source Code on Server"** rule.
 
-1.  **Build (CI)**: GitHub Actions mem-build Docker Image dari kode (`app/`), lalu menyimpannya di GitHub Container Registry (GHCR).
-2.  **Deploy (CD)**: Developer menjalankan workflow manual ("Trigger Deploy") yang memerintahkan server untuk menarik image dari GHCR.
-3.  **Server State**: Server **TIDAK** memiliki source code `app/`. Server hanya berisi file konfigurasi (`.env`, `docker-compose.yml`) dan scripts. Container berjalan menggunakan immutable image.
+1.  **Build (CI)**: GitHub Actions builds a Docker Image from the code (`app/`), and pushes it to GitHub Container Registry (GHCR).
+2.  **Deploy (CD)**: Developer runs a manual workflow ("Trigger Deploy") which instructs the server to pull the image from GHCR.
+3.  **Server State**: The server does **NOT** contain the `app/` source code. It only holds configuration files (`.env`, `docker-compose.prod.yml`) and scripts. The application runs using the immutable image.
 
-Lihat [DEPLOYMENT.md](DEPLOYMENT.md) untuk detail lengkap.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full details.
 
 | `prometheus` | Metrics collector |
 | `loki` | Log aggregator |

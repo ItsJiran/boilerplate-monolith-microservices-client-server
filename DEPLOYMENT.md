@@ -50,20 +50,54 @@ Sensitive data (e.g., Database Passwords, API Keys, Production Secrets) **ARE NO
 *   **Mechanism**:
     1.  GitHub Actions holds these secrets (Settings > Secrets).
     2.  The Deployment Workflow passes these secrets as **arguments** to the deploy script.
-    3.  `deploy.sh` calls `setup-env.sh` with these arguments (e.g., `--DB_PASSWORD=secret`).
+    3.  `deploy.sh` runs `setup-env.sh` to generate the base configuration.
+    4.  `deploy.sh` then **injects** these secrets directly into the generated `.env` files.
 
 ### Deployment Flow (Step-by-Step)
 
 1.  **Artifact Transfer**:
     *   CI/CD copies the latest strictly necessary files to the server: `scripts/`, `infra/`, `docker-compose.yml`, `config.json`, and `.env.example`.
     *   *Note: Source code (`app/`) is NOT copied.*
-2.  **Env Generation**:
-    *   CI/CD runs `./scripts/setup/setup-env.sh`.
-    *   It first applies defaults from `config.json`.
-    *   It then applies **Dynamic Secrets** passed as arguments.
+2.  **Env Generation & Injection**:
+    *   CI/CD runs `./deploy.sh`.
+    *   `deploy.sh` calls `./scripts/setup/setup-env.sh` to load defaults from `config.json`.
+    *   `deploy.sh` parses its arguments and injects **Dynamic Secrets** into the `.env` files.
 3.  **Container Launch**:
     *   Server pulls the Docker Image (Artifact) from GHCR.
     *   Server restarts containers using the generated `.env` files.
+
+---
+
+## Testing & Quality Assurance (Automated)
+
+We implement a rigorous testing strategy to ensure stability before deployment.
+
+### 1. Feature Tests (CI Pipeline)
+Every time a commit is pushed to the `master` branch or a Pull Request is opened, GitHub Actions automatically runs the **Feature Tests**.
+
+*   **Type**: Ephemeral Testing Environment.
+*   **Process**:
+    1.  GitHub Actions spins up a fresh `mariadb`, `redis`, and `app` container.
+    2.  It creates a dedicated testing database.
+    3.  It executes the `test.sh` script (which runs `php artisan test`).
+    4.  If tests fail, the pipeline fails, preventing potential bad code from being tagged for release.
+
+### 2. Local Testing (Developer Guide)
+Before pushing code, developers are encouraged to run the full suite locally.
+Since our app requires SSL and specific host setups, follow these steps:
+
+1.  **Setup Environment**: Ensure `.env` files are synced (`./setup.sh` -> `setup-env`).
+2.  **Run Server & CA**: Start the Step CA server implies you have running `docker-compose.step-ca.yml`.
+3.  **Run Dev SSL**: Generate certificates for local domains (`myapp.test`).
+4.  **Run Dev SSL Verify**: Ensure certificates are trusted by your browser/OS.
+5.  **Setup Host**: Add `127.0.0.1 myapp.test api.myapp.test ...` to your `/etc/hosts`.
+6.  **Run Whole App**: `./run.sh` -> "Run All App".
+7.  **Execute Tests**:
+    ```bash
+    ./test.sh
+    ```
+
+> **Note**: It is important for the container environment to have the main VPS Nginx (Load Balancer) configuration mimicked locally if you are testing domain-specific routing.
 
 ---
 

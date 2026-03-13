@@ -40,12 +40,46 @@ echo -e "${YELLOW}[1/5] Updating configuration and scripts...${NC}"
 # git fetch origin main
 # git checkout origin/main -- scripts/ docker-compose.prod.yml config.json .env.example .env.example.backend .env.example.devops
 
-# 2. Setup Environment Variables (Calls setup-env.sh with arguments)
+# 2. Setup Environment Variables
 echo -e "${YELLOW}[2/5] Setting up environment variables...${NC}"
 
-# We skip the first argument ($1 is VERSION_TAG) and pass the rest to setup-env.sh
+# A. Run setup-env.sh to generate base config from config.json (No arguments passed)
+./scripts/setup/setup-env.sh
+
+# B. Inject Dynamic Secrets (Arguments passed to deploy.sh)
+echo "   -> Injecting secrets..."
+# First, ensure DOCKER_IMAGE_TAG is set manually since we shifted $1
+if [ -f ".env" ]; then
+    if grep -q "^DOCKER_IMAGE_TAG=" .env; then
+         sed -i "s|^DOCKER_IMAGE_TAG=.*|DOCKER_IMAGE_TAG=$VERSION_TAG|" .env
+    else
+         echo "DOCKER_IMAGE_TAG=$VERSION_TAG" >> .env
+    fi
+fi
 shift 1
-./scripts/setup/setup-env.sh --DOCKER_IMAGE_TAG="$VERSION_TAG" "$@"
+
+# Iterate remaining arguments (KEY=VALUE) and inject into .env files
+ENV_FILES=(".env" ".env.backend" ".env.devops")
+if [ $# -gt 0 ]; then
+    for arg in "$@"; do
+        clean_arg="${arg#--}"
+        if [[ "$clean_arg" == *"="* ]]; then
+            KEY="${clean_arg%%=*}"
+            VALUE="${clean_arg#*=}"
+            # Escape value for sed (escape / and &)
+            SAFE_VALUE=$(echo "$VALUE" | sed 's/[\/&]/\\&/g')
+            
+            for ENV_FILE in "${ENV_FILES[@]}"; do
+                if [ -f "$ENV_FILE" ]; then
+                    if grep -q "^${KEY}=" "$ENV_FILE"; then
+                        sed -i "s|^${KEY}=.*|${KEY}=${SAFE_VALUE}|" "$ENV_FILE"
+                    fi
+                fi
+            done
+        fi
+    done
+fi
+echo -e "${GREEN}[OK]${NC}   Secrets injected."
 
 # 3. Pull Docker Images (Artifacts)
 echo -e "${YELLOW}[3/5] Pulling Docker images...${NC}"
