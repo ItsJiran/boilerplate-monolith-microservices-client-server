@@ -64,6 +64,9 @@ jobs:
             sed -i "s|^DOCKER_IMAGE_TAG=.*|DOCKER_IMAGE_TAG=ci-build|" .env
           fi
 
+          sudo ./setup.sh setup-hosts.sh
+          sudo ./setup.sh setup-nginx-host.sh
+
       # -------------------------------------------------------------
       # 2. Start Infrastructure (Docker Compose)
       # -------------------------------------------------------------
@@ -154,4 +157,27 @@ jobs:
       - name: Run Feature Tests
         run: |
           chmod +x run.sh scripts/run/*.sh
+
+          # Wait for App Container to be running (avoid restart loops breaking exec)
+          echo "⏳ Waiting for App container..."
+          for i in {1..30}; do
+            if [ "$(docker compose ps --services --filter "status=running" | grep -w app)" ]; then
+              echo "✅ App container is running!"
+              # Check if PHP is responsive inside
+              if docker compose exec -T app php -v > /dev/null 2>&1; then
+                 echo "✅ PHP CLI is ready!"
+                 break
+              fi
+            fi
+            echo "Waiting for App container... ($i/30)"
+            sleep 3
+          done
+
+          # If loop finished but app not running, show logs and fail
+          if ! [ "$(docker compose ps --services --filter "status=running" | grep -w app)" ]; then
+            echo "❌ App container failed to start."
+            docker compose logs app
+            exit 1
+          fi
+
           ./run.sh test.sh
