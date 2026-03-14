@@ -13,11 +13,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (Optional - only needed if you use local scripts)
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       # -------------------------------------------------------------
-      # 1. SSH to Server & Run Deployment
+      # 1. Copy Files to Production Server (SCP)
+      # -------------------------------------------------------------
+      - name: Copy Files via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          port: ${{ secrets.PROD_SERVER_PORT }}
+          source: "scripts,infra,.env.example,.env.example.backend,.env.example.devops,config.json,run.sh,setup.sh,deploy.sh,docker-compose.prod.yml"
+          target: "/var/www/myapp"
+          strip_components: 0
+
+      # -------------------------------------------------------------
+      # 2. SSH to Server & Run Deployment
       # -------------------------------------------------------------
       - name: Execute Remote Deployment Script
         uses: appleboy/ssh-action@v1.0.3
@@ -28,18 +42,17 @@ jobs:
           port: ${{ secrets.PROD_SERVER_PORT }}
           script_stop: true
           script: |
-            # 1. Update Project Files
-            # Assumes Git sparse-checkout is used, or files (scripts/infra) are SCP'd previously.
-            # If using git sparse-checkout:
+            # Navigate to project directory
             cd /var/www/myapp
-            # git pull origin main (Ensure this only pulls scripts/infra if using sparse)
             
-            # 2. Run Deploy Script with injected secrets
-            # We pass all sensitive production variables as arguments to the script
-            # which will inject them into the .env files.
+            # Preparation: Rename docker-compose.prod.yml -> docker-compose.yml
+            # We overwrite the existing one to ensure it's fresh
+            mv docker-compose.prod.yml docker-compose.yml
             
-            chmod +x scripts/deploy/deploy.sh
+            # Set executable permissions
+            chmod +x run.sh setup.sh deploy.sh scripts/**/*.sh
             
+            # Run Deploy Script with injected secrets
             ./scripts/deploy/deploy.sh ${{ github.event.inputs.version_tag }} \
               --DOCKER_IMAGE_NAME=ghcr.io/${{ github.repository }} \
               --APP_ENV=production \
@@ -54,4 +67,7 @@ jobs:
               --REVERB_APP_ID=${{ secrets.PROD_REVERB_APP_ID }} \
               --REVERB_APP_KEY=${{ secrets.PROD_REVERB_APP_KEY }} \
               --REVERB_APP_SECRET=${{ secrets.PROD_REVERB_APP_SECRET }} \
-              --GRAFANA_ADMIN_PASSWORD=${{ secrets.PROD_GRAFANA_ADMIN_PASSWORD }}
+              --GRAFANA_ADMIN_PASSWORD=${{ secrets.PROD_GRAFANA_ADMIN_PASSWORD }} \
+              --MARIADB_VOLUME_NAME=${{ secrets.PROD_MARIADB_VOLUME_NAME }} \
+              --REDIS_VOLUME_NAME=${{ secrets.PROD_REDIS_VOLUME_NAME }} \
+              --MINIO_VOLUME_NAME=${{ secrets.PROD_MINIO_VOLUME_NAME }}

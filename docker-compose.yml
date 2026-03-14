@@ -414,13 +414,13 @@ networks:
 volumes:
   app-mariadb-data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-mariadb-data
+    name: ${MARIADB_VOLUME_NAME}
   app-redis-data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-redis-data
+    name: ${REDIS_VOLUME_NAME}
   app-storage:
     driver: local
     name: ${APP_SLUG:-app-boilerplate}-storage
   app-minio-data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-minio-data
+    name: ${MINIO_VOLUME_NAME}

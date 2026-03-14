@@ -43,8 +43,19 @@ echo -e "${YELLOW}[1/5] Updating configuration and scripts...${NC}"
 # 2. Setup Environment Variables
 echo -e "${YELLOW}[2/5] Setting up environment variables...${NC}"
 
-# A. Run setup-env.sh to generate base config from config.json (No arguments passed)
-./scripts/setup/setup-env.sh
+# Pre-scan arguments for APP_ENV to determine which config to load
+TARGET_ENV="production"
+for arg in "$@"; do
+  case $arg in
+    --APP_ENV=*)
+      TARGET_ENV="${arg#*=}"
+      ;;
+  esac
+done
+
+# A. Run setup-env.sh to generate base config from config.json
+# We use --force to overwrite existing .env files with fresh config
+./setup.sh setup-env.sh --env="$TARGET_ENV" --force
 
 # B. Inject Dynamic Secrets (Arguments passed to deploy.sh)
 echo "   -> Injecting secrets..."
@@ -85,12 +96,12 @@ echo -e "${GREEN}[OK]${NC}   Secrets injected."
 
 # 3. Pull Docker Images (Artifacts)
 echo -e "${YELLOW}[3/5] Pulling Docker images...${NC}"
-# Use the production compose file
-docker compose -f docker-compose.prod.yml pull
+# Use the production compose file (renamed to docker-compose.yml on server)
+docker compose pull
 
 # 4. Restart Containers
 echo -e "${YELLOW}[4/5] Restarting containers...${NC}"
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+docker compose up -d --remove-orphans
 
 echo -e "${GREEN}✅ Deployment Successful! Version $VERSION_TAG is live.${NC}"
 exit 0
@@ -107,9 +118,6 @@ docker compose up -d --remove-orphans
 # 5. Post-Deployment Tasks
 echo -e "${YELLOW}[5/5] Running post-deployment tasks...${NC}"
 # Wait for DB to be ready? (Usually already ready in rolling update)
-
-echo "   -> Running Migrations..."
-docker compose exec -T app php artisan migrate --force
 
 echo "   -> Optimization..."
 docker compose exec -T app php artisan optimize:clear

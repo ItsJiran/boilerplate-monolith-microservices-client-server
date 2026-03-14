@@ -9,11 +9,24 @@ NC='\033[0m' # No Color
 echo "🛠️  Memulai Setup Environment Variables..."
 echo "----------------------------------------"
 
-# --- Cek Flag Override ---
+# --- Cek Flag Override & Environment ---
 OVERRIDE=0
-if [[ "${1:-}" == "--force" ]]; then
-    OVERRIDE=1
-fi
+TARGET_ENV="local"
+
+for arg in "$@"; do
+    case $arg in
+        --force)
+            OVERRIDE=1
+            shift
+            ;;
+        --env=*)
+            TARGET_ENV="${arg#*=}"
+            shift
+            ;;
+    esac
+done
+
+export TARGET_ENV
 
 # --- Fungsi Reusable untuk Copy File ---
 copy_env() {
@@ -51,11 +64,12 @@ copy_env ".env.example.backend" ".env.backend"
 copy_env ".env.example.devops" ".env.devops"
 
 # --- 2. Sync dengan config.json (Local Environment) ---
-echo "🔄 Syncing .env files with config.json (local)..."
+echo "🔄 Syncing .env files with config.json ($TARGET_ENV)..."
 
 if [ -f "config.json" ]; then
     php -r '
         $configFile = "config.json";
+        $targetEnv = getenv("TARGET_ENV") ?: "local";
         // Daftar file env yang ingin di-update
         $envFiles = [".env", ".env.backend", ".env.devops"];
 
@@ -71,9 +85,9 @@ if [ -f "config.json" ]; then
             exit(1);
         }
 
-        $localConfig = $config["local"] ?? [];
-        if (empty($localConfig)) {
-            echo "No local config found in config.json\n";
+        $envConfig = $config[$targetEnv] ?? [];
+        if (empty($envConfig)) {
+            echo "No config found for environment: $targetEnv in config.json\n";
             exit(0);
         }
 
@@ -103,9 +117,9 @@ if [ -f "config.json" ]; then
                 $parts = explode("=", $line, 2);
                 $key = trim($parts[0]);
                 
-                // Check if key exists in local config
-                if (array_key_exists($key, $localConfig)) {
-                    $val = $localConfig[$key];
+                // Check if key exists in env config
+                if (array_key_exists($key, $envConfig)) {
+                    $val = $envConfig[$key];
                     
                     // Convert booleans to string representation for .env
                     if (is_bool($val)) {

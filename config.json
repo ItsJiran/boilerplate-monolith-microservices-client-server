@@ -46,7 +46,10 @@
     "PROMTAIL_EXPORTER_MEM_LIMIT": "128mb",
     "MARIADB_BUFFER_POOL": "512M",
     "REDIS_MAXMEMORY": "200mb",
-    "SERVER_MAX_CHILDREN": 10
+    "SERVER_MAX_CHILDREN": 10,
+    "MARIADB_VOLUME_NAME": "myapp-local-mariadb-data",
+    "REDIS_VOLUME_NAME": "myapp-local-redis-data",
+    "MINIO_VOLUME_NAME": "myapp-local-minio-data"
   },
   "staging": {
     "APP_ENV": "staging",
@@ -80,7 +83,10 @@
     "CLIENT_MEM_LIMIT": "256mb",
     "MARIADB_BUFFER_POOL": "768M",
     "REDIS_MAXMEMORY": "400mb",
-    "SERVER_MAX_CHILDREN": 20
+    "SERVER_MAX_CHILDREN": 20,
+    "MARIADB_VOLUME_NAME": "myapp-staging-mariadb-data",
+    "REDIS_VOLUME_NAME": "myapp-staging-redis-data",
+    "MINIO_VOLUME_NAME": "myapp-staging-minio-data"
   },
   "production": {
     "APP_ENV": "production",
@@ -112,6 +118,9 @@
     "MINIO_MEM_LIMIT": "2g",
     "LOADBALANCER_MEM_LIMIT": "1g",
     "CLIENT_MEM_LIMIT": "512mb",
+    "MARIADB_VOLUME_NAME": "myapp-prod-mariadb-data",
+    "REDIS_VOLUME_NAME": "myapp-prod-redis-data",
+    "MINIO_VOLUME_NAME": "myapp-prod-minio-data",
     "MARIADB_BUFFER_POOL": "3g",
     "REDIS_MAXMEMORY": "1500mb",
     "SERVER_MAX_CHILDREN": 50

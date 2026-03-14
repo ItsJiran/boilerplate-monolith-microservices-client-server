@@ -202,7 +202,11 @@ services:
 
 volumes:
   app-mariadb-data:
+    driver: local
+    name: ${MARIADB_VOLUME_NAME}
   app-redis-data:
+    driver: local
+    name: ${REDIS_VOLUME_NAME}
 
 networks:
   app_network:
