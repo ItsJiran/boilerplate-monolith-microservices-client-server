@@ -108,9 +108,7 @@ services:
     networks:
       - citra-matrix
     # NO VOLUMES MOUNTED (Code is inside image)
-    extra_hosts:
-      - "${REVERB_URL}:host-gateway"
-      - "${API_URL}:host-gateway"
+
     restart: always
     logging:
       driver: "json-file"
