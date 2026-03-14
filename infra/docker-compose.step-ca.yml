@@ -71,4 +71,4 @@ networks:
 volumes:
   step-ca-data:
     driver: local
-    name: step-ca-data
+    name: ${APP_SLUG:-app-boilerplate}-step-ca-data
