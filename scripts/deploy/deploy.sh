@@ -103,6 +103,22 @@ docker compose pull
 echo -e "${YELLOW}[4/5] Restarting containers...${NC}"
 docker compose up -d --remove-orphans
 
+# 4.5 Setup Nginx & SSL
+echo -e "${YELLOW}[4.5] Configuring Nginx & SSL...${NC}"
+
+# Setup Host Nginx (Load Balancer)
+chmod +x scripts/setup/setup-nginx-host.sh
+# Check if sudo is needed (usually yes on production unless running as root)
+if [ "$EUID" -ne 0 ]; then
+  sudo ./setup.sh setup-nginx-host.sh
+else
+  ./setup.sh setup-nginx-host.sh
+fi
+
+# Run Production SSL Setup (Certbot)
+chmod +x scripts/run/run.prod.ssl.sh
+./run.sh run.prod.ssl.sh
+
 echo -e "${GREEN}✅ Deployment Successful! Version $VERSION_TAG is live.${NC}"
 exit 0
 

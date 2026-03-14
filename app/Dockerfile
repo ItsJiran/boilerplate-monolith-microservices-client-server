@@ -60,7 +60,11 @@ COPY --from=node_builder /app/public/build ./public/build
 RUN mkdir -p storage/logs storage/framework/views storage/framework/cache storage/framework/sessions bootstrap/cache
 
 # Fix Permissions: Berikan kepemilikan penuh ke www-data
-RUN chown -R www-data:www-data /var/www/html
+# Force permission 755 untuk public agar Nginx/FrankenPHP bisa baca static files
+# Force permission 775 untuk storage/cache agar Laravel bisa tulis logs/cache
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 775 storage bootstrap/cache && \
+    chmod -R 755 public
 
 # 6. Environment Variables Khusus Octane
 # Ini MEMAKSA Octane menulis state file ke storage/logs, bukan ke root
