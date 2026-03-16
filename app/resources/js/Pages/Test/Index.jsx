@@ -14,6 +14,34 @@ export default function TestCenter({ status, version, error, laravelVersion, php
     });
     const [resultMessage, setResultMessage] = useState(null);
     const [isMigrating, setIsMigrating] = useState(false);
+    const [isDispatchingJob, setIsDispatchingJob] = useState(false);
+    const [isRunningCron, setIsRunningCron] = useState(false);
+
+    const triggerWorkerJob = async () => {
+        setResultMessage(null);
+        setIsDispatchingJob(true);
+        try {
+            const response = await axios.post(route('test.trigger_worker'));
+            setResultMessage({ status: 'success', message: response?.data?.message ?? 'Job dispatched.' });
+        } catch (requestError) {
+            setResultMessage({ status: 'error', message: requestError?.response?.data?.message ?? 'Failed to dispatch job.' });
+        } finally {
+            setIsDispatchingJob(false);
+        }
+    };
+
+    const triggerCronRun = async () => {
+        setResultMessage(null);
+        setIsRunningCron(true);
+        try {
+            const response = await axios.post(route('test.trigger_cron'));
+            setResultMessage({ status: 'success', message: response?.data?.message ?? 'Schedule run completed.' });
+        } catch (requestError) {
+            setResultMessage({ status: 'error', message: requestError?.response?.data?.message ?? 'Failed to run schedule.' });
+        } finally {
+            setIsRunningCron(false);
+        }
+    };
 
     const runMigration = async () => {
         setResultMessage(null);
@@ -210,6 +238,34 @@ export default function TestCenter({ status, version, error, laravelVersion, php
                                         Send Notification
                                     </button>
                                 </form>
+                            </section>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold text-slate-900">Queue Worker</h3>
+                                <p className="mt-2 text-sm text-slate-500">Dispatch a test job to the queue. If the worker is running, it will pick it up and broadcast a socket event on <code className="text-xs bg-slate-100 px-1 py-0.5 rounded">test-channel</code>.</p>
+                                <button
+                                    type="button"
+                                    onClick={triggerWorkerJob}
+                                    disabled={isDispatchingJob}
+                                    className="mt-5 w-full rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed transition"
+                                >
+                                    {isDispatchingJob ? 'Dispatching...' : 'Dispatch Test Job'}
+                                </button>
+                            </section>
+
+                            <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold text-slate-900">Cron Scheduler</h3>
+                                <p className="mt-2 text-sm text-slate-500">Manually trigger <code className="text-xs bg-slate-100 px-1 py-0.5 rounded">php artisan schedule:run</code>. Returns all due tasks output or "No scheduled tasks were due."</p>
+                                <button
+                                    type="button"
+                                    onClick={triggerCronRun}
+                                    disabled={isRunningCron}
+                                    className="mt-5 w-full rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-500 disabled:opacity-60 disabled:cursor-not-allowed transition"
+                                >
+                                    {isRunningCron ? 'Running Schedule...' : 'Run schedule:run'}
+                                </button>
                             </section>
                         </div>
                     </div>

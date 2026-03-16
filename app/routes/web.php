@@ -52,6 +52,8 @@ Route::get('/test/trigger-socket', [TestController::class , 'triggerSocket'])->n
 Route::get('/test/notification', fn (): RedirectResponse => redirect()->route('test.index'))->name('test.notification');
 Route::post('/test/migrate', [TestController::class , 'migrate'])->name('test.migrate');
 Route::post('/test/trigger-notification', [TestController::class , 'triggerNotification'])->name('test.trigger_notification');
+Route::post('/test/trigger-worker', [TestController::class , 'triggerWorker'])->name('test.trigger_worker');
+Route::post('/test/trigger-cron', [TestController::class , 'triggerCron'])->name('test.trigger_cron');
 
 
 require __DIR__ . '/auth.php';

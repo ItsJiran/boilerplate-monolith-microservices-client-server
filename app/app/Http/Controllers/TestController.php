@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\TestQueueJob;
 use App\Models\User;
 use App\Services\Shared\AppResponse;
 use Illuminate\Foundation\Application;
@@ -88,6 +89,37 @@ class TestController extends Controller
         return AppResponse::success([
             'message' => 'Notification triggered!',
         ]);
+    }
+
+    public function triggerWorker()
+    {
+        if (app()->isProduction()) {
+            return AppResponse::error('Queue worker test is disabled in production.', null, 403);
+        }
+
+        try {
+            TestQueueJob::dispatch();
+
+            return AppResponse::success('Test job dispatched to queue. If the worker is running, a socket broadcast on test-channel will be emitted shortly.');
+        } catch (\Throwable $exception) {
+            return AppResponse::error('Failed to dispatch test job: ' . $exception->getMessage(), null, 500);
+        }
+    }
+
+    public function triggerCron()
+    {
+        if (app()->isProduction()) {
+            return AppResponse::error('Cron test is disabled in production.', null, 403);
+        }
+
+        try {
+            Artisan::call('schedule:run');
+            $output = trim(Artisan::output()) ?: 'No scheduled tasks were due.';
+
+            return AppResponse::success($output);
+        } catch (\Throwable $exception) {
+            return AppResponse::error('Failed to run schedule: ' . $exception->getMessage(), null, 500);
+        }
     }
 
     private function resolveTestUserId(Request $request): ?int
