@@ -35,6 +35,36 @@ load_envs() {
     set +a
 }
 
+append_services_from_csv() {
+    local csv="$1"
+    local parsed=()
+    IFS=',' read -r -a parsed <<< "$csv"
+    for svc in "${parsed[@]}"; do
+        svc="${svc//[[:space:]]/}"
+        [ -n "$svc" ] && NON_INTERACTIVE_SERVICES+=("$svc")
+    done
+}
+
+run_up_non_interactive() {
+    if [ "${#NON_INTERACTIVE_SERVICES[@]}" -eq 0 ]; then
+        echo -e "${GREEN}[EXEC] Starting all services (Non-Interactive)...${NC}"
+        docker compose -f "$COMPOSE_FILE" up -d "${NON_INTERACTIVE_FLAGS[@]}"
+        return
+    fi
+
+    if [ "$NON_INTERACTIVE_ONE_BY_ONE" -eq 1 ]; then
+        echo -e "${GREEN}[EXEC] Starting services one-by-one (Non-Interactive)...${NC}"
+        for svc in "${NON_INTERACTIVE_SERVICES[@]}"; do
+            echo -e "${CYAN}  -> up ${svc}${NC}"
+            docker compose -f "$COMPOSE_FILE" up -d "${NON_INTERACTIVE_FLAGS[@]}" "$svc"
+        done
+        return
+    fi
+
+    echo -e "${GREEN}[EXEC] Starting selected services (Non-Interactive)...${NC}"
+    docker compose -f "$COMPOSE_FILE" up -d "${NON_INTERACTIVE_FLAGS[@]}" "${NON_INTERACTIVE_SERVICES[@]}"
+}
+
 # --- Non-Interactive Mode (CI/Scripting) ---
 if [[ -n "$1" ]]; then
     COMPOSE_FILE="$DEFAULT_FILE"
@@ -43,20 +73,74 @@ if [[ -n "$1" ]]; then
     
     ACTION="$1"
     shift
-    ARGS="$@" # Pass remaining args like --build
+
+    NON_INTERACTIVE_ONE_BY_ONE=0
+    NON_INTERACTIVE_FLAGS=()
+    NON_INTERACTIVE_SERVICES=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --file=*)
+                COMPOSE_FILE="${1#--file=}"
+                ;;
+            --file)
+                shift
+                [ -z "$1" ] && {
+                    echo "Missing value for --file"
+                    exit 1
+                }
+                COMPOSE_FILE="$1"
+                ;;
+            --one-by-one)
+                NON_INTERACTIVE_ONE_BY_ONE=1
+                ;;
+            --services=*)
+                append_services_from_csv "${1#--services=}"
+                ;;
+            --services)
+                shift
+                [ -z "$1" ] && {
+                    echo "Missing value for --services"
+                    exit 1
+                }
+                append_services_from_csv "$1"
+                ;;
+            --*)
+                NON_INTERACTIVE_FLAGS+=("$1")
+                ;;
+            *)
+                NON_INTERACTIVE_SERVICES+=("$1")
+                ;;
+        esac
+        shift
+    done
     
     case "$ACTION" in
         up)
-            echo -e "${GREEN}[EXEC] Starting all services (Non-Interactive)...${NC}"
             load_envs
-            docker compose -f "$COMPOSE_FILE" up -d $ARGS
+            if [ ! -f "$COMPOSE_FILE" ]; then
+                echo -e "${RED}[ERROR] Compose file '$COMPOSE_FILE' tidak ditemukan!${NC}"
+                exit 1
+            fi
+            run_up_non_interactive
             ;;
         down)
-            echo -e "${RED}[EXEC] Stopping all services...${NC}"
-            docker compose -f "$COMPOSE_FILE" down
+            if [ ! -f "$COMPOSE_FILE" ]; then
+                echo -e "${RED}[ERROR] Compose file '$COMPOSE_FILE' tidak ditemukan!${NC}"
+                exit 1
+            fi
+            if [ "${#NON_INTERACTIVE_SERVICES[@]}" -gt 0 ]; then
+                echo -e "${RED}[EXEC] Stopping selected services...${NC}"
+                docker compose -f "$COMPOSE_FILE" stop "${NON_INTERACTIVE_SERVICES[@]}"
+            else
+                echo -e "${RED}[EXEC] Stopping all services...${NC}"
+                docker compose -f "$COMPOSE_FILE" down
+            fi
             ;;
         *)
-            echo "Unknown command: $ACTION. Usage: $0 [up|down] [args]"
+            echo "Unknown command: $ACTION"
+            echo "Usage: $0 up [--file docker-compose.prod.yml] [--build] [--one-by-one] [--services=svc1,svc2 | svc1 svc2]"
+            echo "       $0 down [--file docker-compose.prod.yml] [--services=svc1,svc2 | svc1 svc2]"
             exit 1
             ;;
     esac

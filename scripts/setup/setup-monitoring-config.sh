@@ -86,6 +86,18 @@ render_template() {
   local source_file="$1"
   local target_file="$2"
 
+  if [ -d "$target_file" ]; then
+    if [ -n "$(ls -A "$target_file" 2>/dev/null)" ]; then
+      echo -e "${RED}[ERROR]${NC} Target '$target_file' is a non-empty directory."
+      echo -e "${YELLOW}[HINT]${NC} Remove or rename the directory, then run again."
+      exit 1
+    fi
+    rmdir "$target_file"
+    echo -e "${YELLOW}[FIX]${NC} Removed empty directory at target path: $target_file"
+  fi
+
+  mkdir -p "$(dirname "$target_file")"
+
   if [ -f "$target_file" ]; then
     if [ "$REPLACE" -eq 0 ]; then
       echo -e "${YELLOW}[SKIP]${NC} $target_file sudah ada. Tidak ditimpa."

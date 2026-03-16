@@ -70,12 +70,72 @@ upsert_env_key() {
     fi
 }
 
+normalize_domain_value() {
+    local value="$1"
+    value="${value#http://}"
+    value="${value#https://}"
+    value="${value#//}"
+    value="${value%/}"
+    echo "$value"
+}
+
+normalize_scheme_value() {
+    local value="$1"
+    value="${value#http://}"
+    value="${value#https://}"
+    value="${value#//}"
+    value="${value%://}"
+    value="${value%/}"
+    [ -z "$value" ] && value="https"
+    echo "$value"
+}
+
 apply_argument_overrides() {
     if [ ${#SET_OVERRIDES[@]} -eq 0 ]; then
         return
     fi
 
     echo "🔧 Applying argument overrides..."
+
+    if [ ! -f ".env" ]; then
+        echo -e "${RED}[ERROR]${NC} .env not found, cannot apply overrides safely."
+        return
+    fi
+
+    # Update key di file yang memang sudah punya key tersebut.
+    # Jika key belum ada di semua file env, tambahkan hanya ke .env.
+    for pair in "${SET_OVERRIDES[@]}"; do
+        KEY="${pair%%=*}"
+        VALUE="${pair#*=}"
+
+        if [ -z "$KEY" ] || [ "$KEY" = "$pair" ]; then
+            echo -e "${YELLOW}[WARN]${NC} Invalid --set format: $pair (use --set=KEY=VALUE)"
+            continue
+        fi
+
+        if [[ "$KEY" == *_DOMAIN ]] || [[ "$KEY" == *_EXTRA_HOST ]]; then
+            VALUE="$(normalize_domain_value "$VALUE")"
+        elif [ "$KEY" = "APP_SCHEME" ]; then
+            VALUE="$(normalize_scheme_value "$VALUE")"
+        fi
+
+        KEY_FOUND=0
+        for envFile in .env .env.backend .env.devops; do
+            if [ ! -f "$envFile" ]; then
+                continue
+            fi
+
+            if grep -qE "^${KEY}=" "$envFile"; then
+                upsert_env_key "$envFile" "$KEY" "$VALUE"
+                KEY_FOUND=1
+            fi
+        done
+
+        if [ "$KEY_FOUND" -eq 0 ]; then
+            upsert_env_key ".env" "$KEY" "$VALUE"
+            echo "   -> $KEY ditambahkan ke .env (tidak ditemukan di file env lain)."
+        fi
+    done
 
     for envFile in .env .env.backend .env.devops; do
         if [ ! -f "$envFile" ]; then
@@ -84,24 +144,15 @@ apply_argument_overrides() {
 
         echo "   Processing $envFile..."
         UPDATED=0
-
         for pair in "${SET_OVERRIDES[@]}"; do
             KEY="${pair%%=*}"
-            VALUE="${pair#*=}"
-
-            if [ -z "$KEY" ] || [ "$KEY" = "$pair" ]; then
-                echo -e "${YELLOW}[WARN]${NC} Invalid --set format: $pair (use --set=KEY=VALUE)"
-                continue
+            if [ -n "$KEY" ] && [ "$KEY" != "$pair" ] && grep -qE "^${KEY}=" "$envFile"; then
+                UPDATED=$((UPDATED + 1))
             fi
-
-            upsert_env_key "$envFile" "$KEY" "$VALUE"
-            UPDATED=$((UPDATED + 1))
         done
 
         APP_SCHEME_VALUE=$(grep -E '^APP_SCHEME=' "$envFile" | head -n 1 | cut -d'=' -f2-)
-        if [ -z "$APP_SCHEME_VALUE" ]; then
-            APP_SCHEME_VALUE="https"
-        fi
+        APP_SCHEME_VALUE="$(normalize_scheme_value "$APP_SCHEME_VALUE")"
 
         DERIVATIONS=(
             "APP_DOMAIN:APP_URL"
@@ -131,10 +182,13 @@ apply_argument_overrides() {
 
             if [ "$DOMAIN_OVERRIDE" -eq 1 ] && [ "$URL_OVERRIDE" -eq 0 ]; then
                 DOMAIN_VALUE=$(grep -E "^${DOMAIN_KEY}=" "$envFile" | head -n 1 | cut -d'=' -f2-)
-                DOMAIN_VALUE="${DOMAIN_VALUE#http://}"
-                DOMAIN_VALUE="${DOMAIN_VALUE#https://}"
-                DOMAIN_VALUE="${DOMAIN_VALUE%/}"
-                upsert_env_key "$envFile" "$URL_KEY" "${APP_SCHEME_VALUE}://${DOMAIN_VALUE}"
+                DOMAIN_VALUE="$(normalize_domain_value "$DOMAIN_VALUE")"
+
+                if grep -qE "^${URL_KEY}=" "$envFile"; then
+                    upsert_env_key "$envFile" "$URL_KEY" "${APP_SCHEME_VALUE}://${DOMAIN_VALUE}"
+                elif [ "$envFile" = ".env" ]; then
+                    upsert_env_key "$envFile" "$URL_KEY" "${APP_SCHEME_VALUE}://${DOMAIN_VALUE}"
+                fi
             fi
         done
 
@@ -177,6 +231,43 @@ if [ -f "config.json" ]; then
             exit(0);
         }
 
+        $normalizeDomain = static function ($value) {
+            if (!is_string($value)) {
+                return $value;
+            }
+
+            $value = preg_replace("#^https?://#i", "", $value);
+            $value = ltrim($value, "/");
+            $value = rtrim($value, "/");
+            return $value;
+        };
+
+        $normalizeScheme = static function ($value) {
+            if (!is_string($value) || $value === "") {
+                return "https";
+            }
+
+            $value = preg_replace("#^https?://#i", "", $value);
+            $value = trim($value, "/:");
+            return $value === "" ? "https" : $value;
+        };
+
+        // Normalize all domain-like keys from config to host-only form.
+        foreach ($envConfig as $cfgKey => $cfgVal) {
+            if (!is_string($cfgKey)) {
+                continue;
+            }
+
+            if ($cfgKey === "APP_SCHEME") {
+                $envConfig[$cfgKey] = $normalizeScheme($cfgVal);
+                continue;
+            }
+
+            if (str_ends_with($cfgKey, "_DOMAIN") || str_ends_with($cfgKey, "_EXTRA_HOST")) {
+                $envConfig[$cfgKey] = $normalizeDomain($cfgVal);
+            }
+        }
+
         // --- Auto-Derive URLs from Domains ---
         $appScheme = $envConfig["APP_SCHEME"] ?? "https";
         
@@ -191,10 +282,7 @@ if [ -f "config.json" ]; then
 
         foreach ($domainMap as $domainKey => $urlKey) {
             if (isset($envConfig[$domainKey]) && !isset($envConfig[$urlKey])) {
-                $domain = $envConfig[$domainKey];
-                // Clean domain just in case
-                $domain = str_replace(["http://", "https://"], "", $domain);
-                $domain = trim($domain, "/");
+                $domain = $normalizeDomain($envConfig[$domainKey]);
                 $envConfig[$urlKey] = "{$appScheme}://{$domain}";
             }
         }
@@ -259,18 +347,21 @@ if [ -f "config.json" ]; then
             }
 
             // 2. Append missing keys from config.json
+            //    Only append ke .env agar key baru tidak tersebar ke semua env file.
             $keysAppended = 0;
-            foreach ($envConfig as $cfgKey => $cfgVal) {
-                if (!$isSyncableKey($cfgKey) || isset($existingKeys[$cfgKey])) {
-                    continue;
-                }
+            if ($envFile === ".env") {
+                foreach ($envConfig as $cfgKey => $cfgVal) {
+                    if (!$isSyncableKey($cfgKey) || isset($existingKeys[$cfgKey])) {
+                        continue;
+                    }
 
-                if (is_bool($cfgVal)) {
-                    $cfgVal = $cfgVal ? "true" : "false";
-                }
+                    if (is_bool($cfgVal)) {
+                        $cfgVal = $cfgVal ? "true" : "false";
+                    }
 
-                $newLines[] = "$cfgKey=$cfgVal";
-                $keysAppended++;
+                    $newLines[] = "$cfgKey=$cfgVal";
+                    $keysAppended++;
+                }
             }
 
             // Write back to .env

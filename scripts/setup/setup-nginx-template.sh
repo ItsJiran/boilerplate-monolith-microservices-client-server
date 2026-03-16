@@ -16,6 +16,30 @@ SERVICE=""
 DOMAIN=""
 FORCE_APPEND=0
 
+ensure_output_is_file() {
+  local target="$1"
+  local normalized="${target%/}"
+
+  if [ -z "$normalized" ]; then
+    echo -e "${RED}[ERROR]${NC} Output path is invalid: '$target'"
+    exit 1
+  fi
+
+  if [ -d "$normalized" ]; then
+    if [ -n "$(ls -A "$normalized" 2>/dev/null)" ]; then
+      echo -e "${RED}[ERROR]${NC} Output path is a non-empty directory: $normalized"
+      echo -e "${YELLOW}[HINT]${NC} Remove or rename the directory, then run again."
+      exit 1
+    fi
+
+    rmdir "$normalized"
+    echo -e "${YELLOW}[FIX]${NC} Removed empty directory at output path: $normalized"
+  fi
+
+  mkdir -p "$(dirname "$normalized")"
+  OUTPUT_FILE="$normalized"
+}
+
 usage() {
   cat <<USAGE
 Usage: $0 --single --service=NAME --domain=DOMAIN [options]
@@ -277,6 +301,8 @@ done
 load_env "$ROOT_DIR/.env"
 load_env "$ROOT_DIR/.env.backend"
 load_env "$ROOT_DIR/.env.devops"
+
+ensure_output_is_file "$OUTPUT_FILE"
 
 if [ "$SINGLE_MODE" -ne 1 ]; then
   echo -e "${RED}[ERROR]${NC} Only single mode is supported. Use --single"

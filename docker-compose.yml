@@ -166,8 +166,8 @@ services:
       - ./app:/var/www/html:z
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     extra_hosts:
-      - "${REVERB_URL}:host-gateway"
-      - "${API_URL}:host-gateway"
+      - "${REVERB_EXTRA_HOST:-reverb.myapp.test}:host-gateway"
+      - "${API_EXTRA_HOST:-api.myapp.test}:host-gateway"
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -202,8 +202,8 @@ services:
       - ./app:/var/www/html:z
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     extra_hosts:
-      - "${REVERB_URL}:host-gateway"
-      - "${API_URL}:host-gateway"
+      - "${REVERB_EXTRA_HOST:-reverb.myapp.test}:host-gateway"
+      - "${API_EXTRA_HOST:-api.myapp.test}:host-gateway"
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -349,16 +349,16 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-sail}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password}
 
-      MINIO_SERVER_URL: https://${S3_URL}
-      MINIO_BROWSER_REDIRECT_URL: https://${S3_CONSOLE_URL}
+      MINIO_SERVER_URL: ${S3_URL}
+      MINIO_BROWSER_REDIRECT_URL: ${S3_CONSOLE_URL}
     volumes:
       - app-minio-data:/data
     command: minio server /data --console-address ":${MINIO_CONSOLE_PORT}" --address ":${MINIO_PORT}"
     networks:
       - app_network
     extra_hosts:
-      - "${S3_URL}:host-gateway"
-      - "${S3_CONSOLE_URL}:host-gateway"
+      - "${S3_EXTRA_HOST:-s3.myapp.test}:host-gateway"
+      - "${S3_CONSOLE_EXTRA_HOST:-s3-console.myapp.test}:host-gateway"
     logging:
       driver: "json-file"
       options:

@@ -225,18 +225,18 @@ Flow baru dibagi jadi 3 script agar modular dan bisa dijalankan 1-1 per domain/s
 
 1) Generate LB template (dipakai container nginx di Docker):
 ```bash
-./setup.sh setup-nginx-template.sh --single --service=app --domain=myapp.com
-./setup.sh setup-nginx-template.sh --single --service=reverb --domain=reverb.myapp.com
-./setup.sh setup-nginx-template.sh --single --service=s3 --domain=s3.myapp.com
+./setup.sh setup-nginx-template.sh --single --service=app --domain=myapp.test
+./setup.sh setup-nginx-template.sh --single --service=reverb --domain=reverb.myapp.test
+./setup.sh setup-nginx-template.sh --single --service=s3 --domain=s3.myapp.test
 ```
 
 Output default: `infra/nginx/default.conf.lb.template`
 
 2) Generate host VPS template (untuk nginx host):
 ```bash
-./setup.sh setup-nginx-host-template.sh --single --service=app --domain=myapp.com --ssl-mode=letsencrypt
-./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain=reverb.myapp.com --ssl-mode=letsencrypt
-./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain=s3.myapp.com --ssl-mode=letsencrypt
+./setup.sh setup-nginx-host-template.sh --single --service=app --domain=myapp.test --ssl-mode=letsencrypt
+./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain=reverb.myapp.test --ssl-mode=letsencrypt
+./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain=s3.myapp.test --ssl-mode=letsencrypt
 ```
 
 Output default: `infra/nginx/default.conf.vps.template`
@@ -343,6 +343,19 @@ Interactive script with **checkbox selector** — select specific services to op
 | `down` | Stop and remove container |
 | `stop` | Stop without removing container |
 | `volume` | Manage / recreate volume |
+
+For non-interactive (CI/deploy), you can run selected services modularly:
+
+```bash
+# Up selected services at once
+./run.sh run.app.sh up --build --services=app,app-worker,app-socket
+
+# Up selected services one-by-one (safer for staged startup)
+./run.sh run.app.sh up --build --one-by-one --services=mariadb,redis,app
+
+# Stop only selected services
+./run.sh run.app.sh down --services=app-hmr,phpmyadmin
+```
 
 ### Run Monitoring
 
