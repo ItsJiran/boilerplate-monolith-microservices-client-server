@@ -192,6 +192,8 @@ jobs:
           ./setup.sh setup-nginx-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}"
           ./setup.sh setup-nginx-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}"
 
+          sudo systemctl start nginx
+
           # 6. Setup /etc/hosts and deploy host nginx config
           sudo ./setup.sh setup-hosts.sh
           sudo ./setup.sh setup-nginx-host-vps.sh --file-name="${APP_DOMAIN}.conf"
