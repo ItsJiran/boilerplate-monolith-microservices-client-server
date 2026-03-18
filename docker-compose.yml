@@ -143,7 +143,7 @@ services:
   # ---- BACKEND SERVICE
   app:
     build:
-      context: ./servers/app-server
+      context: ./core-servers/app-server
       dockerfile: ./Dockerfile.dev
     user: root
     command: >
@@ -163,7 +163,7 @@ services:
     networks:
       - app_network
     volumes:
-      - ./servers/app-server:/var/www/html:z
+      - ./core-servers/app-server:/var/www/html:z
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     extra_hosts:
       - "${REVERB_EXTRA_HOST:-reverb.myapp.test}:host-gateway"
@@ -178,7 +178,7 @@ services:
 
   app-worker:
     build:
-      context: ./servers/app-server
+      context: ./core-servers/app-server
       dockerfile: ./Dockerfile.dev
     command: php artisan queue:work
     deploy:
@@ -195,7 +195,7 @@ services:
     networks:
       - app_network
     volumes:
-      - ./servers/app-server:/var/www/html:z
+      - ./core-servers/app-server:/var/www/html:z
       - ./step-ca-public-root.pem:/etc/ssl/certs/step-ca-public-root.pem:ro
     restart: unless-stopped
     working_dir: /var/www/html
@@ -207,7 +207,7 @@ services:
 
   app-socket:
     build:
-      context: ./servers/app-server
+      context: ./core-servers/app-server
       dockerfile: ./Dockerfile.dev
     command: php artisan reverb:start --host=0.0.0.0 --port=${REVERB_SERVER_PORT} --debug
     deploy:
@@ -225,7 +225,7 @@ services:
     networks:
       - app_network
     volumes:
-      - ./servers/app-server:/var/www/html:z
+      - ./core-servers/app-server:/var/www/html:z
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     restart: unless-stopped
     working_dir: /var/www/html
@@ -237,7 +237,7 @@ services:
 
   app-cron:
     build:
-      context: ./servers/app-server
+      context: ./core-servers/app-server
       dockerfile: ./Dockerfile.dev
     command: php artisan schedule:work
     deploy:
@@ -252,7 +252,7 @@ services:
     networks:
       - app_network
     volumes:
-      - ./servers/app-server:/var/www/html:z
+      - ./core-servers/app-server:/var/www/html:z
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     # restart: unless-stopped # Cron jangan restart policy strict jika exit code 0 (though schedule:work runs forever)
     restart: unless-stopped
@@ -294,7 +294,7 @@ services:
   client-web:
     build:
       context: .
-      dockerfile: ./clients/app-client/apps/web/Dockerfile.dev
+      dockerfile: ./core-clients/app-client/apps/web/Dockerfile.dev
     container_name: client-web
     command: pnpm dev --filter web --host
     expose:
@@ -302,7 +302,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./clients/app-client:/app/clients/app-client
+      - ./core-clients/app-client:/app/core-clients/app-client
     env_file:
       - ./.env
     environment:
@@ -318,7 +318,7 @@ services:
   client-mobile:
     build:
       context: .
-      dockerfile: ./clients/app-client/apps/mobile/Dockerfile.dev
+      dockerfile: ./core-clients/app-client/apps/mobile/Dockerfile.dev
     container_name: client-mobile
     command: pnpm start --filter mobile --host
     ports:
@@ -327,7 +327,7 @@ services:
       - "19002:19002"
       - "8081:8081" # Metro bundler
     volumes:
-      - ./clients/app-client:/app/clients/app-client
+      - ./core-clients/app-client:/app/core-clients/app-client
     env_file:
       - ./.env
     environment:

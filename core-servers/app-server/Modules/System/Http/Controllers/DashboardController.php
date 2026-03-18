@@ -1,0 +1,35 @@
+<?php
+
+namespace Modules\System\Http\Controllers;
+
+use Modules\System\DTO\Dashboard\DashboardFilterDto;
+use Modules\System\Services\Dashboard\DashboardService;
+use Modules\System\Services\Shared\AppResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class DashboardController extends Controller
+{
+    public function __construct(
+        protected DashboardService $dashboardService,
+    ) {}
+
+    public function index(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $dto = DashboardFilterDto::fromRequest($request);
+            $dashboardData = $this->dashboardService->getDashboardData($dto, $user);
+
+            return AppResponse::success(
+                data: $dashboardData,
+                view: 'Dashboard'
+            );
+        } catch (\Exception $e) {
+            return AppResponse::error(
+                message: 'Failed to load dashboard data',
+                details: $e->getMessage()
+            );
+        }
+    }
+}

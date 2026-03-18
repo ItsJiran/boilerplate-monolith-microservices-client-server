@@ -115,7 +115,7 @@ services:
     # Or for simple deployment, build from context
     build:
       context: .
-      dockerfile: ./clients/app-client/apps/web/Dockerfile
+      dockerfile: ./core-clients/app-client/apps/web/Dockerfile
     deploy:
       resources:
         limits:
