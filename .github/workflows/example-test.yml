@@ -1,4 +1,4 @@
-name: 🧪 Feature Tests (CI)
+name: 🧪 Example Feature Tests (CI)
 
 on:
   push:

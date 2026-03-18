@@ -1,61 +1,67 @@
-# DevOps & Configuration Standardization Tasks
+# Migration to Microservices Architecture (Client-Server Split)
 
-## 1. Standardization of URL vs Domain Definitions
-**Objective:** Eliminate ambiguity between "URL" (with protocol) and "Domain" (host only) to prevent configuration conflicts in Nginx and App integration.
+**Objective**: Refactor the current Monolith structure into a Microservices-ready architecture by separating Server (Backend) and Client (Frontend) applications into distinct directories.
 
-- [ ] **Analyze & Refactor `config.json` & `.env.example`**
-    - [ ] Rename variables to follow strict convention:
-        - `*_DOMAIN`: Hostname only (e.g., `api.myapp.com`, `myapp.com`). Used for Nginx `server_name`, Cookies, etc.
-        - `*_URL`: Full URL with protocol (e.g., `https://api.myapp.com`). Used for API calls, Redirects, CORS.
-        - `*_SCHEME`: Protocol (e.g., `http` or `https`).
-    - [ ] **Specific Changes needed:**
-        - Check `API_URL`, `REVERB_URL`, `S3_URL` in `config.json`. Currently, they appear to be domains (missing `https://`).
-        - Decision: Either add `https://` to them, or rename them to `API_DOMAIN`, `REVERB_DOMAIN`, etc., and derive the URL in the `.env` generation step.
-    - [ ] Update `config.json` structure to reflect these changes.
-    - [ ] Update `.env.example` to align with new variable names.
+**Target Structure**:
+```
+.
+├── clients/
+│   └── app-client/          # Turbo Monorepo (React / React Native)
+├── servers/
+│   └── app-server/          # Current Laravel Application
+├── infra/                   # Shared Infrastructure (Docker, Nginx, Monitoring)
+├── scripts/                 # Shared Scripts
+└── ...
+```
 
-## 2. Integration & Verification
-**Objective:** Ensure the new variable definitions propagate correctly to the Application and Third-Party services.
+---
 
-- [ ] **Update `setup-env.sh`**
-    - [ ] Ensure the script correctly maps the new JSON keys to `.env` variables.
-    - [ ] Add validation: Warn if a `_URL` variable is missing `http://` or `https://`.
-- [ ] **Verify Application Config (`config/*.php`)**
-    - [ ] Check `config/app.php`, `config/sanctum.php`, `config/cors.php`, `config/filesystems.php`.
-    - [ ] Ensure they use the correct `env('VAR_DOMAIN')` or `env('VAR_URL')` based on need.
-        - *Example:* Sanctum stateful domains need `_DOMAIN`. S3 disk endpoint usually needs full `_URL`.
+## Phase 1: Structure Reorganization & Cleanup
+- [ ] **Create Root Directories**
+    - Create `servers/` directory.
+    - Create `clients/` directory.
+- [ ] **Migrate Backend**
+    - Move existing `app/` directory to `servers/app-server/`.
+    - Ensure all hidden files (like `.env.example`, etc.) are moved correctly.
+- [ ] **Initialize Frontend Structure**
+    - Create `clients/app-client/` directory.
+    - *Note:* The user intends to use a Turbo Monorepo (React/React Native) here.
+    - (Future Task) Initialize Turbo Repo in `clients/app-client/`.
 
-## 3. Dynamic Nginx & Load Balancer Setup Script
-**Objective:** Generate valid Nginx configurations dynamically based on enabled services to avoid "bentrok" (conflicts) and invalid upstream errors.
+## Phase 2: Configuration & Docker Updates
+- [ ] **Update Docker Compose (`docker-compose.yml`)**
+    - Update build context for `server`, `server-worker`, `server-socket`, `server-cron` from `app/` to `servers/app-server/`.
+    - Update volume mappings: `./app:/var/www/html` to `./servers/app-server:/var/www/html`.
+- [ ] **Update Production Docker Compose (`docker-compose.prod.yml`)**
+    - Update build context (if applicable) or verify image paths remains valid.
+    - Update any bind mounts used for configuration.
+- [ ] **Update Infrastructure Config (`infra/`)**
+    - Check `infra/nginx/` templates if they reference local paths.
+    - Check any monitoring configs referencing source code paths.
 
-- [ ] **Create `scripts/setup/setup-nginx.sh`**
-    - [ ] **Input Arguments:** Accept flags for services to generate, e.g., `--enable-minio`, `--enable-pma`, `--enable-reverb`.
-    - [ ] **Template Processing:**
-        - Use `envsubst` or sed to replace `${VAR_DOMAIN}` placeholders in templates with actual values from `.env`.
-    - [ ] **Modular Templates:** Split the large `default.conf.lb.template` into smaller chunks if necessary, or use conditional logic in the script to construct the final file.
-    - [ ] **Output:** Generate `infra/nginx/default.conf` (or inside `conf.d/`).
+## Phase 3: Script Updates
+- [ ] **Update Root Scripts**
+    - `setup.sh`: Update paths to `.env` files and helper scripts.
+    - `run.sh`: Update paths to docker compose files and service contexts.
+- [ ] **Update Helper Scripts (`scripts/`)**
+    - Update `scripts/setup/setup-env.sh` to look for `.env.example` in `servers/app-server/` or root (decide on env strategy).
+    - Update `scripts/run/*.sh` to use correct working directories if they `cd` into `app/`.
+    - Update `scripts/deploy/*.sh` to build from `servers/app-server/`.
 
-## 4. Cleanup Utilities
-**Objective:** Provide a way to reset the environment for clean testing.
+## Phase 4: Environment Management
+- [ ] **Environment Variables Strategy**
+    - Decide if `.env` files stay in root or move to `servers/app-server/`.
+    - *Recommendation*: Keep `.env` (infrastructure) in root, and specific backend envs in `servers/app-server/.env` OR symlink them.
+    - For now, ensure scripts copy root `.env` to `servers/app-server/.env` during setup.
 
-- [ ] **Create `scripts/utils/cleanup-generated.sh`**
-    - [ ] Remove generated `.env` files (`.env`, `.env.backend`, `.env.devops`).
-    - [ ] Remove generated Nginx configs (`infra/nginx/*.conf`).
-    - [ ] (Optional) Clear `storage/` logs or temp files if needed.
+## Phase 5: Client-Side Initialization (Placeholder)
+- [ ] **Setup `clients/app-client`**
+    - Initialize basic Turbo Repo structure.
+    - Create `apps/web` (React) and `apps/mobile` (React Native) placeholders.
+    - Configure `pnpm-workspace.yaml`.
 
-## 5. Deployment Workflow Validation
-- [ ] Update `deploy.sh` or `WORKFLOW-CONFIG.md` to include `setup-nginx.sh` execution before starting containers.
-
-## 6. Modular Deployment Scripts (Micro Scripts)
-**Objective:** Break deployment logic into composable scripts so CI/CD workflows can combine only the required steps per service.
-
-- [ ] Define modular deployment structure in `scripts/deploy/`, for example:
-    - [ ] `scripts/deploy/steps/10-prepare-env.sh`
-    - [ ] `scripts/deploy/steps/20-pull-image.sh`
-    - [ ] `scripts/deploy/steps/30-setup-nginx.sh`
-    - [ ] `scripts/deploy/steps/40-migrate.sh`
-    - [ ] `scripts/deploy/steps/50-up-services.sh`
-    - [ ] `scripts/deploy/steps/60-healthcheck.sh`
-- [ ] Add orchestrator wrapper script, e.g. `scripts/deploy/deploy.pipeline.sh`, that accepts step combinations.
-- [ ] Ensure every step is idempotent and can run independently.
-- [ ] Add CI examples in workflow docs to show how to compose step variants for different targets.
+## Phase 6: Documentation
+- [ ] **Update `README.md`**
+    - Document the new directory structure.
+    - Update "Getting Started" commands.
+    - Explain the separaion of concerns (Servers vs Clients).

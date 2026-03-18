@@ -1,4 +1,4 @@
-name: 🐳 Build and Push Image
+name: 🐳 Example Build and Push Image
 
 on:
   push:

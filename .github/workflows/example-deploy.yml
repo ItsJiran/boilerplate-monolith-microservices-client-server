@@ -1,0 +1,69 @@
+name: "Example Deploy Workflow"
+
+on:
+  workflow_dispatch:
+    inputs:
+      local_file:
+        description: "Local file path from repository root (example: docker-compose.prod.yml)"
+        required: true
+        default: "docker-compose.prod.yml"
+      remote_file:
+        description: "Absolute destination file path on server (example: /opt/myapp/docker-compose.prod.yml)"
+        required: true
+        default: "/opt/myapp/docker-compose.prod.yml"
+
+jobs:
+  copy-file:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate source file exists
+        run: |
+          if [ ! -f "${{ github.event.inputs.local_file }}" ]; then
+            echo "Source file not found: ${{ github.event.inputs.local_file }}"
+            exit 1
+          fi
+
+      - name: Ensure remote directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p "$(dirname '${{ github.event.inputs.remote_file }}')"
+
+      - name: Copy single file to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: ${{ github.event.inputs.local_file }}
+          target: /tmp/gh-copy
+
+      - name: Move uploaded file to final destination
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            TMP_FILE="/tmp/gh-copy/${{ github.event.inputs.local_file }}"
+            DEST_FILE="${{ github.event.inputs.remote_file }}"
+
+            if [ ! -f "$TMP_FILE" ]; then
+              echo "Uploaded temp file not found: $TMP_FILE"
+              exit 1
+            fi
+
+            mv "$TMP_FILE" "$DEST_FILE"
+            rm -rf /tmp/gh-copy
+            ls -l "$DEST_FILE"
