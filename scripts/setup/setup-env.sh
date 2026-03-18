@@ -378,6 +378,14 @@ fi
 apply_argument_overrides
 
 echo "----------------------------------------"
+echo "📂 Copying .env to servers/app-server/.env..."
+if [ -d "servers/app-server" ]; then
+    cat .env .env.backend > servers/app-server/.env
+    echo -e "${GREEN}[OK]${NC} servers/app-server/.env created (merged .env + .env.backend)"
+else
+    echo -e "${YELLOW}[WARN]${NC} Directory servers/app-server not found, skipping copy."
+fi
+
 echo -e "✅ Setup selesai!"
 echo -e "👉 Silakan edit file ${YELLOW}.env${NC} dan ${YELLOW}.env.backend${NC} sesuai kebutuhan."
 echo -e "👉 Lalu jalankan: ${GREEN}./dev.sh${NC} (atau docker compose up)"

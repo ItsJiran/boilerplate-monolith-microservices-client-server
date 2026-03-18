@@ -47,7 +47,7 @@ jobs:
       - name: Build and push Docker image (App Base)
         uses: docker/build-push-action@v5
         with:
-          context: ./app
+          context: ./servers/app-server
           file: ./app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}

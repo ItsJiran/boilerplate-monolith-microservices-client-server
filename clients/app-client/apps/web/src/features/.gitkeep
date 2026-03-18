@@ -1,0 +1,6 @@
+// Placeholder for Auth Feature
+// Follow this structure:
+// features/auth/
+//   - components/ (LoginForm, etc)
+//   - hooks/      (useLogin, etc)
+//   - api/        (loginApi, etc)

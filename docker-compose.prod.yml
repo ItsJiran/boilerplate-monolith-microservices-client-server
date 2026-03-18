@@ -98,6 +98,48 @@ services:
       resources:
         limits:
           cpus: '${SERVER_CPU_LIMIT:-1.0}'
+    networks:
+      - app_network
+    env_file:
+      - ./.env.backend
+      - ./.env.prod
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    restart: always
+    logging:
+      driver: "json-file"
+
+  client-web:
+    # Assuming the CI/CD pipeline builds this image separately
+    # Or for simple deployment, build from context
+    build:
+      context: .
+      dockerfile: ./clients/app-client/apps/web/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '${CLIENT_CPU_LIMIT:-0.5}'
+          memory: '${CLIENT_MEM_LIMIT:-256m}'
+    networks:
+      - app_network
+    restart: always
+    # Environment variables are baked into build or passed here
+    env_file:
+      - ./.env.prod
+    # Expose internally to load balancer
+    expose:
+      - "3000"
+    logging:
+      driver: "json-file"
+
+  # client-mobile: 
+  # Mobile Client is usually distributed via Stores (Play Store/App Store) or OTA updates (RAS).
+  # We do NOT run a mobile container in production docker-compose unless it serves a Web Build.
+  # If needed for Web:
+  # client-mobile-web:
+  #   build: ...Dockerfile (Nginx serve)
+  
           memory: '${SERVER_MEM_LIMIT:-512m}'
     expose:
       - "${APP_PORT}"

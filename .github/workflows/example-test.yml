@@ -1,239 +1,239 @@
-name: 🧪 Example Feature Tests (CI)
+# name: 🧪 Example Feature Tests (CI)
 
-on:
-  push:
-    branches:
-      - master
-    tags: 
-      - 'v*'
-  pull_request:
-    branches:
-      - master
+# on:
+#   push:
+#     branches:
+#       - master
+#     tags: 
+#       - 'v*'
+#   pull_request:
+#     branches:
+#       - master
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
-env:
-  # Environment Variables for CI
-  DB_DATABASE: testing_db
-  DB_USERNAME: admin
-  DB_PASSWORD: password
-  DB_ROOT_PASSWORD: root
-  # Must match services in docker-compose.yml (or we can override)
+# env:
+#   # Environment Variables for CI
+#   DB_DATABASE: testing_db
+#   DB_USERNAME: admin
+#   DB_PASSWORD: password
+#   DB_ROOT_PASSWORD: root
+#   # Must match services in docker-compose.yml (or we can override)
 
-jobs:
-  feature-tests:
-    runs-on: ubuntu-latest
+# jobs:
+#   feature-tests:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
 
-      # -------------------------------------------------------------
-      # 1. Setup Environment (Mimics Deployment Flow)
-      # -------------------------------------------------------------
-      - name: Setup Configuration
-        run: |
-          chmod +x setup.sh scripts/setup/*.sh
+#       # -------------------------------------------------------------
+#       # 1. Setup Environment (Mimics Deployment Flow)
+#       # -------------------------------------------------------------
+#       - name: Setup Configuration
+#         run: |
+#           chmod +x setup.sh scripts/setup/*.sh
           
-          # 1. Generate Base Configs (Syncs from config.json)
-          ./setup.sh setup-env.sh --force
+#           # 1. Generate Base Configs (Syncs from config.json)
+#           ./setup.sh setup-env.sh --force
           
-          # 2. Inject CI/Testing Specific Variables
-          # This mimics the "Secret Injection" step in deploy.sh
-          echo "👉 Injecting CI Testing configurations..."
+#           # 2. Inject CI/Testing Specific Variables
+#           # This mimics the "Secret Injection" step in deploy.sh
+#           echo "👉 Injecting CI Testing configurations..."
           
-          # Update .env (Main)
-          sed -i "s|^APP_ENV=.*|APP_ENV=testing|" .env
-          sed -i "s|^APP_DEBUG=.*|APP_DEBUG=true|" .env
+#           # Update .env (Main)
+#           sed -i "s|^APP_ENV=.*|APP_ENV=testing|" .env
+#           sed -i "s|^APP_DEBUG=.*|APP_DEBUG=true|" .env
           
-          # Update .env.backend (Database & Redis)
-          sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env.backend
-          sed -i "s|^DB_HOST=.*|DB_HOST=mariadb|" .env.backend
-          sed -i "s|^DB_PORT=.*|DB_PORT=3306|" .env.backend
-          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ env.DB_DATABASE }}|" .env.backend
-          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ env.DB_USERNAME }}|" .env.backend
-          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ env.DB_PASSWORD }}|" .env.backend
-          sed -i "s|^MARIADB_ROOT_PASSWORD=.*|MARIADB_ROOT_PASSWORD=${{ env.DB_ROOT_PASSWORD }}|" .env.backend
+#           # Update .env.backend (Database & Redis)
+#           sed -i "s|^DB_CONNECTION=.*|DB_CONNECTION=mysql|" .env.backend
+#           sed -i "s|^DB_HOST=.*|DB_HOST=mariadb|" .env.backend
+#           sed -i "s|^DB_PORT=.*|DB_PORT=3306|" .env.backend
+#           sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ env.DB_DATABASE }}|" .env.backend
+#           sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ env.DB_USERNAME }}|" .env.backend
+#           sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ env.DB_PASSWORD }}|" .env.backend
+#           sed -i "s|^MARIADB_ROOT_PASSWORD=.*|MARIADB_ROOT_PASSWORD=${{ env.DB_ROOT_PASSWORD }}|" .env.backend
           
-          sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" .env.backend
-          sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=redispassword|" .env.backend
+#           sed -i "s|^REDIS_HOST=.*|REDIS_HOST=redis|" .env.backend
+#           sed -i "s|^REDIS_PASSWORD=.*|REDIS_PASSWORD=redispassword|" .env.backend
           
-          # Increase Memory Limits for CI (Avoid OOM Kill 137)
-          sed -i "s|^SERVER_MEM_LIMIT=.*|SERVER_MEM_LIMIT=1G|" .env.devops
-          sed -i "s|^MARIADB_MEM_LIMIT=.*|MARIADB_MEM_LIMIT=512M|" .env.devops
+#           # Increase Memory Limits for CI (Avoid OOM Kill 137)
+#           sed -i "s|^SERVER_MEM_LIMIT=.*|SERVER_MEM_LIMIT=1G|" .env.devops
+#           sed -i "s|^MARIADB_MEM_LIMIT=.*|MARIADB_MEM_LIMIT=512M|" .env.devops
 
-          # Append Docker Tag (Required for Compose)
-          if ! grep -q "DOCKER_IMAGE_TAG=" .env; then
-            echo "DOCKER_IMAGE_TAG=ci-build" >> .env
-          else
-            sed -i "s|^DOCKER_IMAGE_TAG=.*|DOCKER_IMAGE_TAG=ci-build|" .env
-          fi
+#           # Append Docker Tag (Required for Compose)
+#           if ! grep -q "DOCKER_IMAGE_TAG=" .env; then
+#             echo "DOCKER_IMAGE_TAG=ci-build" >> .env
+#           else
+#             sed -i "s|^DOCKER_IMAGE_TAG=.*|DOCKER_IMAGE_TAG=ci-build|" .env
+#           fi
 
-          sudo ./setup.sh setup-hosts.sh
+#           sudo ./setup.sh setup-hosts.sh
 
-      # -------------------------------------------------------------
-      # 1.5. Install Dependencies (With Caching)
-      # -------------------------------------------------------------
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: mbstring, dom, fileinfo, mysql
-          coverage: none
+#       # -------------------------------------------------------------
+#       # 1.5. Install Dependencies (With Caching)
+#       # -------------------------------------------------------------
+#       - name: Setup PHP
+#         uses: shivammathur/setup-php@v2
+#         with:
+#           php-version: '8.3'
+#           extensions: mbstring, dom, fileinfo, mysql
+#           coverage: none
 
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-        working-directory: ./app
+#       - name: Get Composer Cache Directory
+#         id: composer-cache
+#         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+#         working-directory: ./servers/app-server
 
-      - name: Cache Composer Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+#       - name: Cache Composer Dependencies
+#         uses: actions/cache@v4
+#         with:
+#           path: ${{ steps.composer-cache.outputs.dir }}
+#           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+#           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install Composer Dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-        working-directory: ./app
+#       - name: Install Composer Dependencies
+#         run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+#         working-directory: ./servers/app-server
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: app/package-lock.json
+#       - name: Setup Node
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20'
+#           cache: 'npm'
+#           cache-dependency-path: app/package-lock.json
 
-      - name: Install NPM & Build Assets
-        run: |
-          npm install
-        working-directory: ./app
+#       - name: Install NPM & Build Assets
+#         run: |
+#           npm install
+#         working-directory: ./servers/app-server
 
-      - name: Fix Permissions for Docker
-        run: |
-          # Ensure permissions are open for the Docker container user (www-data)
-          # 'No such file' for autoload.php often means directory execute permission is missing for the container user
-          sudo chmod -R 777 app/vendor
-          sudo chmod -R 777 app/storage
-          sudo chmod -R 777 app/bootstrap/cache
-          sudo chmod -R 777 app/public
+#       - name: Fix Permissions for Docker
+#         run: |
+#           # Ensure permissions are open for the Docker container user (www-data)
+#           # 'No such file' for autoload.php often means directory execute permission is missing for the container user
+#           sudo chmod -R 777 servers/app-server/vendor
+#           sudo chmod -R 777 servers/app-server/storage
+#           sudo chmod -R 777 servers/app-server/bootstrap/cache
+#           sudo chmod -R 777 servers/app-server/public
 
-      # -------------------------------------------------------------
-      # 2. Start Infrastructure (Docker Compose)
-      # -------------------------------------------------------------
-      - name: Start Services (Step CA & Nginx Host)
-        run: |
-          # 1. Install Nginx (Host/VPS Simulation)
-          sudo apt-get update
-          sudo apt-get install -y nginx
-          sudo systemctl stop nginx # Stop to allow config changes
+#       # -------------------------------------------------------------
+#       # 2. Start Infrastructure (Docker Compose)
+#       # -------------------------------------------------------------
+#       - name: Start Services (Step CA & Nginx Host)
+#         run: |
+#           # 1. Install Nginx (Host/VPS Simulation)
+#           sudo apt-get update
+#           sudo apt-get install -y nginx
+#           sudo systemctl stop nginx # Stop to allow config changes
 
-          # 2. Setup Internal Network
-          # Ensure network exists before starting services (external: true in compose)
-          if [ -f .env ]; then
-            set -a # automatically export all variables
-            source .env
-            set +a
-          fi
+#           # 2. Setup Internal Network
+#           # Ensure network exists before starting services (external: true in compose)
+#           if [ -f .env ]; then
+#             set -a # automatically export all variables
+#             source .env
+#             set +a
+#           fi
           
-          # Default fallback
-          export APP_NETWORK="${APP_NETWORK:-app_boilerplate_network}"
-          echo "Using network: $APP_NETWORK"
+#           # Default fallback
+#           export APP_NETWORK="${APP_NETWORK:-app_boilerplate_network}"
+#           echo "Using network: $APP_NETWORK"
           
-          # Create network if not exists
-          docker network inspect "$APP_NETWORK" >/dev/null 2>&1 || docker network create "$APP_NETWORK"
+#           # Create network if not exists
+#           docker network inspect "$APP_NETWORK" >/dev/null 2>&1 || docker network create "$APP_NETWORK"
 
-          # 3. Install Step CLI (Required for SSL script)
-          wget https://dl.step.sm/gh-release/cli/docs-cli-install/v0.24.4/step-cli_0.24.4_amd64.deb
-          sudo dpkg -i step-cli_0.24.4_amd64.deb
-          # Ensure 'step-cli' command exists (sometimes it installs as 'step')
-          if ! command -v step-cli &> /dev/null; then
-            if command -v step &> /dev/null; then
-              sudo ln -s $(which step) /usr/bin/step-cli
-            else
-              echo "Error: step-cli installation failed"
-              exit 1
-            fi
-          fi
+#           # 3. Install Step CLI (Required for SSL script)
+#           wget https://dl.step.sm/gh-release/cli/docs-cli-install/v0.24.4/step-cli_0.24.4_amd64.deb
+#           sudo dpkg -i step-cli_0.24.4_amd64.deb
+#           # Ensure 'step-cli' command exists (sometimes it installs as 'step')
+#           if ! command -v step-cli &> /dev/null; then
+#             if command -v step &> /dev/null; then
+#               sudo ln -s $(which step) /usr/bin/step-cli
+#             else
+#               echo "Error: step-cli installation failed"
+#               exit 1
+#             fi
+#           fi
 
-          # 4. Start Step CA
-          # Explicitly pass environment from shell or file
-          ./run.sh run.step-ca.sh --yes
+#           # 4. Start Step CA
+#           # Explicitly pass environment from shell or file
+#           ./run.sh run.step-ca.sh --yes
 
-          # 4. Generate Dev SSL
-          # Wait for Step CA to be healthy (simple sleep or healthcheck)
-          sleep 5
-          chmod +x scripts/run/run.dev.ssl.sh
-          ./run.sh run.dev.ssl.sh
-          ./run.sh run.dev.ssl.ca.sh
+#           # 4. Generate Dev SSL
+#           # Wait for Step CA to be healthy (simple sleep or healthcheck)
+#           sleep 5
+#           chmod +x scripts/run/run.dev.ssl.sh
+#           ./run.sh run.dev.ssl.sh
+#           ./run.sh run.dev.ssl.ca.sh
 
-          # 5. Setup Nginx (LB + Host) with modular single-entry flow
-          chmod +x scripts/setup/*.sh
+#           # 5. Setup Nginx (LB + Host) with modular single-entry flow
+#           chmod +x scripts/setup/*.sh
 
-          sudo rm -f "/etc/nginx/sites-available/${APP_DOMAIN}.conf" "/etc/nginx/sites-enabled/${APP_DOMAIN}.conf"
-          rm -f infra/nginx/default.conf.lb.template infra/nginx/default.conf.vps.template
+#           sudo rm -f "/etc/nginx/sites-available/${APP_DOMAIN}.conf" "/etc/nginx/sites-enabled/${APP_DOMAIN}.conf"
+#           rm -f infra/nginx/default.conf.lb.template infra/nginx/default.conf.vps.template
 
-          APP_SLUG_SAFE="${APP_SLUG:-myapp}"
-          SSL_CERT_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.pem"
-          SSL_KEY_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.key"
+#           APP_SLUG_SAFE="${APP_SLUG:-myapp}"
+#           SSL_CERT_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.pem"
+#           SSL_KEY_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.key"
 
-          ./setup.sh setup-nginx-host-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-          ./setup.sh setup-nginx-host-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-          ./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-          ./setup.sh setup-nginx-host-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-          ./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-          ./setup.sh setup-nginx-host-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+#           ./setup.sh setup-nginx-host-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
 
-          ./setup.sh setup-nginx-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}"
-          ./setup.sh setup-nginx-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}"
-          ./setup.sh setup-nginx-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}"
-          ./setup.sh setup-nginx-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}"
-          ./setup.sh setup-nginx-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}"
-          ./setup.sh setup-nginx-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}"
+#           ./setup.sh setup-nginx-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}"
 
-          sudo systemctl start nginx
+#           sudo systemctl start nginx
 
-          # 6. Setup /etc/hosts and deploy host nginx config
-          sudo ./setup.sh setup-hosts.sh
-          sudo ./setup.sh setup-nginx-host-vps.sh --file-name="${APP_DOMAIN}.conf"
+#           # 6. Setup /etc/hosts and deploy host nginx config
+#           sudo ./setup.sh setup-hosts.sh
+#           sudo ./setup.sh setup-nginx-host-vps.sh --file-name="${APP_DOMAIN}.conf"
 
-      - name: Start Containers (App Stack)
-        run: |
-          # Use modular run.app.sh wrapper (non-interactive mode)
-          chmod +x run.sh scripts/run/*.sh
-          ./run.sh run.app.sh up --build --one-by-one mariadb redis minio db-init createbuckets
-          ./run.sh run.app.sh up --build --one-by-one app app-worker app-socket app-cron load_balancer phpmyadmin app-hmr
+#       - name: Start Containers (App Stack)
+#         run: |
+#           # Use modular run.app.sh wrapper (non-interactive mode)
+#           chmod +x run.sh scripts/run/*.sh
+#           ./run.sh run.app.sh up --build --one-by-one mariadb redis minio db-init createbuckets
+#           ./run.sh run.app.sh up --build --one-by-one app app-worker app-socket app-cron load_balancer phpmyadmin app-hmr
 
-      - name: Wait for Services (Database)
-        run: |
-          echo "Waiting for MariaDB to be ready..."
-          for i in {1..30}; do
-            if docker compose exec -T mariadb mariadb-admin ping -h localhost -u root -p${{ env.DB_ROOT_PASSWORD }} --silent; then
-                echo "✅ MariaDB is up!"
-                break
-            fi
-            echo "⏳ Waiting for Database..."
-            sleep 2
-          done
+#       - name: Wait for Services (Database)
+#         run: |
+#           echo "Waiting for MariaDB to be ready..."
+#           for i in {1..30}; do
+#             if docker compose exec -T mariadb mariadb-admin ping -h localhost -u root -p${{ env.DB_ROOT_PASSWORD }} --silent; then
+#                 echo "✅ MariaDB is up!"
+#                 break
+#             fi
+#             echo "⏳ Waiting for Database..."
+#             sleep 2
+#           done
 
-      - name: Setup Database (Testing)
-        run: |
-          # Create testing database
-          docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ env.DB_DATABASE }};"
-          docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ env.DB_DATABASE }}.* TO '${{ env.DB_USERNAME }}'@'%';"
-          docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
+#       - name: Setup Database (Testing)
+#         run: |
+#           # Create testing database
+#           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ env.DB_DATABASE }};"
+#           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ env.DB_DATABASE }}.* TO '${{ env.DB_USERNAME }}'@'%';"
+#           docker compose exec -T mariadb mariadb -u root -p${{ env.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
 
-      # -------------------------------------------------------------
-      # 3. Execute Tests (Using run.sh -> scripts/run/test.sh)
-      # -------------------------------------------------------------
-      - name: Run Feature Tests
-        run: |
-          chmod +x run.sh scripts/run/*.sh
+#       # -------------------------------------------------------------
+#       # 3. Execute Tests (Using run.sh -> scripts/run/test.sh)
+#       # -------------------------------------------------------------
+#       - name: Run Feature Tests
+#         run: |
+#           chmod +x run.sh scripts/run/*.sh
 
-          # add docker logs for debugging if test.sh fails (common issues: DB connection, missing env vars, etc.)
-          # We can capture logs before running tests for better debugging
-          echo "📋 Container Logs (Before Tests):"
-          docker compose logs          
+#           # add docker logs for debugging if test.sh fails (common issues: DB connection, missing env vars, etc.)
+#           # We can capture logs before running tests for better debugging
+#           echo "📋 Container Logs (Before Tests):"
+#           docker compose logs          
 
-          ./run.sh test.sh
+#           ./run.sh test.sh

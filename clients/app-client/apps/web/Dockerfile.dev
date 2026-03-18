@@ -1,0 +1,18 @@
+FROM node:20-alpine
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY clients/app-client/package.json ./clients/app-client/
+COPY clients/app-client/apps/web/package.json ./clients/app-client/apps/web/
+# And all other packages
+COPY clients/app-client/packages/common/package.json ./clients/app-client/packages/common/
+
+RUN pnpm install
+
+COPY . .
+
+EXPOSE 3000
+CMD ["pnpm", "dev", "--filter", "web"]

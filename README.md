@@ -1,6 +1,6 @@
-# App Boilerplate — Monolith Full-Stack Architecture
+# App Boilerplate — Microservices-Ready Architecture (Client-Server Split)
 
-> Laravel 12 + React (Inertia.js) + Docker — Production-grade boilerplate with integrated monitoring, SSL, real-time capabilities, and S3-compatible object storage.
+> Laravel 12 (API) + Turbo Monorepo (React + React Native) + Docker — Production-grade boilerplate with integrated monitoring, SSL, real-time capabilities, and S3-compatible object storage.
 >
 > Developed by **Akterma Technology [AT]** — ItsJiran | `2026`
 
@@ -10,10 +10,10 @@
 
 | Layer | Technology |
 |---|---|
-| Backend | Laravel 12, PHP 8.2+, FrankenPHP, Laravel Octane |
-| Frontend | React (JSX), Inertia.js, Vite, Tailwind CSS |
+| Backend (Server) | Laravel 12, PHP 8.2+, FrankenPHP, Laravel Octane (API Only) |
+| Frontend (Client) | Turbo Monorepo: React (Web), React Native (Mobile) |
 | Real-time | Laravel Reverb (WebSocket) |
-| Auth | Laravel Sanctum + Breeze |
+| Auth | Laravel Sanctum |
 | Database | MariaDB |
 | Cache / Queue | Redis |
 | Object Storage | MinIO (S3-compatible) |
@@ -29,27 +29,21 @@
 
 ```
 .
-├── app/                         # Laravel Application
-│   ├── app/
-│   │   ├── Http/Controllers/    # Controllers (thin layer)
-│   │   ├── Services/            # Business logic per domain
-│   │   │   ├── AccessControl/
-│   │   │   ├── Admin/
-│   │   │   ├── Dashboard/
-│   │   │   ├── Notification/
-│   │   │   ├── Profile/
-│   │   │   └── Shared/
-│   │   ├── DTO/                 # Data Transfer Objects
-│   │   ├── Models/              # Eloquent Models
-│   │   ├── Events/ + Listeners/ # Event-driven
-│   │   ├── Jobs/                # Async queue jobs
-│   │   └── Rules/               # Custom validation rules
-│   └── resources/js/
-│       ├── Pages/               # Inertia page components
-│       ├── Components/ui/       # Atomic Design (atoms/molecules/organisms)
-│       ├── Hooks/               # Custom React hooks
-│       ├── Stores/              # Zustand state stores
-│       └── Lib/                 # utils, enums, authRoles, routes
+├── clients/                     # Frontend Clients (Monorepo)
+│   └── app-client/              # Turbo Repo
+│       ├── apps/
+│       │   ├── web/             # React Web App
+│       │   └── mobile/          # React Native App
+│       └── packages/            # Shared UI/Configs
+├── servers/                     # Backend Services
+│   └── app-server/              # Laravel Application (formerly app/)
+│       ├── app/
+│       │   ├── Http/Controllers/
+│       │   ├── Services/
+│       │   ├── DTO/
+│       │   ├── Models/
+│       │   └── ...
+│       └── ...
 ├── infra/                       # Docker Infrastructure
 │   ├── docker-compose.devops.yml
 │   ├── docker-compose.devops.exporter.yml
@@ -122,9 +116,9 @@ Or run `./setup.sh` → select `setup-env.sh`.
 
 This project uses a **Continuous Delivery (CD)** strategy with a strict **"No Source Code on Server"** rule.
 
-1.  **Build (CI)**: GitHub Actions builds a Docker Image from the code (`app/`), and pushes it to GitHub Container Registry (GHCR).
+1.  **Build (CI)**: GitHub Actions builds a Docker Image from the code (`servers/app-server/`), and pushes it to GitHub Container Registry (GHCR).
 2.  **Deploy (CD)**: Developer runs a manual workflow ("Trigger Deploy") which instructs the server to pull the image from GHCR.
-3.  **Server State**: The server does **NOT** contain the `app/` source code. It only holds configuration files (`.env`, `docker-compose.prod.yml`) and scripts. The application runs using the immutable image.
+3.  **Server State**: The server does **NOT** contain the source code. It only holds configuration files (`.env`, `docker-compose.prod.yml`) and scripts. The application runs using the immutable image.
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for full details.
 
@@ -193,8 +187,11 @@ Run the following steps in sequence.
 # Or select 'A' to run all setup scripts at once
 ```
 
-This will copy `.env.example` → `.env`, `.env.backend`, `.env.devops`.
-Edit these files as needed (minimally: `APP_DOMAIN`, `DB_PASSWORD`, `APP_SLUG`).
+This will:
+- Copy `.env.example` → `.env`, `.env.backend`, `.env.devops` in root.
+- **Auto-sync**: Copy root `.env` + `.env.backend` → `servers/app-server/.env` (required for Laravel).
+
+Edit root files as needed (minimally: `APP_DOMAIN`, `DB_PASSWORD`, `APP_SLUG`).
 
 ### 2. Setup Local Hosts
 

@@ -57,7 +57,7 @@ Sensitive data (e.g., Database Passwords, API Keys, Production Secrets) **ARE NO
 
 1.  **Artifact Transfer**:
     *   CI/CD copies the latest strictly necessary files to the server: `scripts/`, `infra/`, `docker-compose.yml`, `config.json`, and `.env.example`.
-    *   *Note: Source code (`app/`) is NOT copied.*
+    *   *Note: Source code (`servers/app-server/`) is NOT copied to the server.*
 2.  **Env Generation & Injection**:
     *   CI/CD runs `./deploy.sh`.
     *   `deploy.sh` calls `./scripts/setup/setup-env.sh` to load defaults from `config.json`.
