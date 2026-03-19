@@ -1,29 +1,24 @@
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
 export default function Login() {
-  const [username, setUsername] = useState('user@example.com');
+  const [email, setEmail] = useState('user@example.com');
   const [password, setPassword] = useState('secret');
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
-  const handleLogin = () => {
-    // In a real app, validate credentials
+  const handleLogin = async () => {
     if (isAuthenticated) {
       router.replace('/');
       return;
     }
-    
-    // Simulate login
-    if (username === 'user@example.com' && password === 'secret') {
-      login(username);
-      // Wait for state update (or mock it)
-      setTimeout(() => {
-        router.replace('/protected');
-      }, 500);
-    } else {
+
+    try {
+      await login(email, password);
+      router.replace('/protected');
+    } catch {
       alert('Invalid credentials');
     }
   };
@@ -34,9 +29,10 @@ export default function Login() {
       
       <TextInput
         style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
@@ -46,7 +42,7 @@ export default function Login() {
         secureTextEntry
       />
       
-      <Button title="Login" onPress={handleLogin} />
+      <Button title={loading ? 'Signing in...' : 'Login'} onPress={handleLogin} disabled={loading} />
       
       <Button title="Go Back" onPress={() => router.back()} color="gray" />
     </View>

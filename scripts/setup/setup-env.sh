@@ -115,7 +115,7 @@ apply_argument_overrides() {
 
         if [[ "$KEY" == *_DOMAIN ]] || [[ "$KEY" == *_EXTRA_HOST ]]; then
             VALUE="$(normalize_domain_value "$VALUE")"
-        elif [ "$KEY" = "APP_SCHEME" ]; then
+        elif [ "$KEY" = "SERVICE_SCHEME" ]; then
             VALUE="$(normalize_scheme_value "$VALUE")"
         fi
 
@@ -151,16 +151,16 @@ apply_argument_overrides() {
             fi
         done
 
-        APP_SCHEME_VALUE=$(grep -E '^APP_SCHEME=' "$envFile" | head -n 1 | cut -d'=' -f2-)
+        APP_SCHEME_VALUE=$(grep -E '^SERVICE_SCHEME=' "$envFile" | head -n 1 | cut -d'=' -f2-)
         APP_SCHEME_VALUE="$(normalize_scheme_value "$APP_SCHEME_VALUE")"
 
         DERIVATIONS=(
-            "APP_DOMAIN:APP_URL"
-            "API_DOMAIN:API_URL"
-            "REVERB_DOMAIN:REVERB_URL"
-            "S3_DOMAIN:S3_URL"
-            "S3_CONSOLE_DOMAIN:S3_CONSOLE_URL"
-            "PMA_DOMAIN:PMA_ABSOLUTE_URI"
+            "SERVICE_SERVER_DOMAIN:SERVICE_SERVER_URL"
+            "SERVICE_API_DOMAIN:SERVICE_API_URL"
+            "SERVICE_REVERB_DOMAIN:SERVICE_REVERB_URL"
+            "SERVICE_S3_DOMAIN:S3_URL"
+            "SERVICE_S3_CONSOLE_DOMAIN:S3_CONSOLE_URL"
+            "SERVICE_PMA_DOMAIN:SERVICE_PMA_ABSOLUTE_URI"
         )
 
         for derivation in "${DERIVATIONS[@]}"; do
@@ -172,7 +172,7 @@ apply_argument_overrides() {
 
             for pair in "${SET_OVERRIDES[@]}"; do
                 OVERRIDE_KEY="${pair%%=*}"
-                if [ "$OVERRIDE_KEY" = "$DOMAIN_KEY" ] || [ "$OVERRIDE_KEY" = "APP_SCHEME" ]; then
+                if [ "$OVERRIDE_KEY" = "$DOMAIN_KEY" ] || [ "$OVERRIDE_KEY" = "SERVICE_SCHEME" ]; then
                     DOMAIN_OVERRIDE=1
                 fi
                 if [ "$OVERRIDE_KEY" = "$URL_KEY" ]; then
@@ -258,7 +258,7 @@ if [ -f "config.json" ]; then
                 continue;
             }
 
-            if ($cfgKey === "APP_SCHEME") {
+            if ($cfgKey === "SERVICE_SCHEME") {
                 $envConfig[$cfgKey] = $normalizeScheme($cfgVal);
                 continue;
             }
@@ -269,15 +269,15 @@ if [ -f "config.json" ]; then
         }
 
         // --- Auto-Derive URLs from Domains ---
-        $appScheme = $envConfig["APP_SCHEME"] ?? "https";
+        $appScheme = $envConfig["SERVICE_SCHEME"] ?? "https";
         
         $domainMap = [
-            "APP_DOMAIN"        => "APP_URL",
-            "API_DOMAIN"        => "API_URL",
-            "REVERB_DOMAIN"     => "REVERB_URL",
-            "S3_DOMAIN"         => "S3_URL",
-            "S3_CONSOLE_DOMAIN" => "S3_CONSOLE_URL",
-            "PMA_DOMAIN"        => "PMA_ABSOLUTE_URI",
+            "SERVICE_SERVER_DOMAIN"        => "SERVICE_SERVER_URL",
+            "SERVICE_API_DOMAIN"        => "SERVICE_API_URL",
+            "SERVICE_REVERB_DOMAIN"     => "SERVICE_REVERB_URL",
+            "SERVICE_S3_DOMAIN"         => "S3_URL",
+            "SERVICE_S3_CONSOLE_DOMAIN" => "S3_CONSOLE_URL",
+            "SERVICE_PMA_DOMAIN"        => "SERVICE_PMA_ABSOLUTE_URI",
         ];
 
         foreach ($domainMap as $domainKey => $urlKey) {

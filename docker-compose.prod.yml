@@ -97,15 +97,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-1.0}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-1.0}'
     networks:
       - app_network
     env_file:
       - ./.env.backend
       - ./.env.prod
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
+      - SERVICE_SERVER_ENV=production
+      - SERVICE_SERVER_DEBUG=false
     restart: always
     logging:
       driver: "json-file"
@@ -119,8 +119,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${CLIENT_CPU_LIMIT:-0.5}'
-          memory: '${CLIENT_MEM_LIMIT:-256m}'
+          cpus: '${SERVICE_CLIENT_WEB_CPU_LIMIT:-0.5}'
+          memory: '${SERVICE_CLIENT_WEB_MEM_LIMIT:-256m}'
     networks:
       - app_network
     restart: always
@@ -140,9 +140,9 @@ services:
   # client-mobile-web:
   #   build: ...Dockerfile (Nginx serve)
   
-          memory: '${SERVER_MEM_LIMIT:-512m}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-512m}'
     expose:
-      - "${APP_PORT}"
+      - "${SERVICE_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -164,8 +164,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0.5}'
-          memory: '${SERVER_MEM_LIMIT:-256m}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0.5}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-256m}'
     env_file:
       - ./.env
       - ./.env.backend
@@ -180,14 +180,14 @@ services:
   app-socket:
     image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
     # Reverb Production Command
-    command: php artisan reverb:start --host=0.0.0.0 --port=${REVERB_SERVER_PORT}
+    command: php artisan reverb:start --host=0.0.0.0 --port=${SERVICE_REVERB_SERVER_PORT}
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0.5}'
-          memory: '${SERVER_MEM_LIMIT:-256m}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0.5}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-256m}'
     expose:
-      - "${REVERB_SERVER_PORT}"
+      - "${SERVICE_REVERB_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -229,7 +229,7 @@ services:
       - ./.env.backend
       - ./.env.devops  
     ports:
-      - "${LOAD_BALANCER_PORT}:80"
+      - "${SERVICE_LOAD_BALANCER_PORT}:80"
       # HMR Port removed in Prod
     volumes:
       - ./infra/nginx/default.conf.lb.template:/etc/nginx/templates/default.conf.template:ro,Z
@@ -250,5 +250,5 @@ volumes:
 
 networks:
   app_network:
-    name: ${APP_NETWORK:-app_boilerplate_network}
+    name: ${SERVICE_NETWORK:-app_boilerplate_network}
     driver: bridge

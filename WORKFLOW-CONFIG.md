@@ -19,18 +19,18 @@ File ini menjadi "Single Source of Truth" untuk alamat-alamat server di setiap e
 ```json
 {
   "local": {
-    "APP_URL": "https://myapp.test",
-    "APP_DEBUG": true
+    "SERVICE_SERVER_URL": "https://myapp.test",
+    "SERVICE_SERVER_DEBUG": true
     // ...
   },
   "staging": {
-    "APP_URL": "https://staging.myapp.com",
-    "APP_DEBUG": true
+    "SERVICE_SERVER_URL": "https://staging.myapp.com",
+    "SERVICE_SERVER_DEBUG": true
     // ...
   },
   "production": {
-    "APP_URL": "https://myapp.com",
-    "APP_DEBUG": false
+    "SERVICE_SERVER_URL": "https://myapp.com",
+    "SERVICE_SERVER_DEBUG": false
     // ...
   }
 }
@@ -70,7 +70,7 @@ Pipeline CI/CD bertugas merakit file `.env` yang "fresh" setiap kali deploy, men
     Pipeline membaca `config.json` -> key `production` (atau `staging`). Script automasi akan meniban value default `.env.example` dengan value production dari JSON (misal: Memory Limit, URL, Debug mode = false).
 4.  **Secret Injection (Dynamic Secrets)**:
     Pipeline mengambil secrets dari **Repository Settings (GitHub Secrets)** dan meniban variable sensitif yang bersifat rahasia.
-    *   *Contoh:* `DB_PASSWORD`, `APP_KEY`, `AWS_SECRET_ACCESS_KEY`.
+    *   *Contoh:* `DB_PASSWORD`, `SERVICE_SERVER_KEY`, `AWS_SECRET_ACCESS_KEY`.
 
 ### Contoh Implementasi (Gambaran Script CI)
 
@@ -90,7 +90,7 @@ Pipeline CI/CD bertugas merakit file `.env` yang "fresh" setiap kali deploy, men
     # Menggunakan sed/envsubst untuk mengganti value placeholder dengan Real Secret
     # Penting: Secret DI-INJECT saat runtime pipeline, tidak pernah di-commit!
     sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}|g" .env
-    sed -i "s|APP_KEY=.*|APP_KEY=${{ secrets.PROD_APP_KEY }}|g" .env
+    sed -i "s|SERVICE_SERVER_KEY=.*|SERVICE_SERVER_KEY=${{ secrets.PROD_APP_KEY }}|g" .env
 ```
 
 ---
@@ -99,9 +99,9 @@ Pipeline CI/CD bertugas merakit file `.env` yang "fresh" setiap kali deploy, men
 
 | Variable Type | Contoh | Sumber di Local | Sumber di Prod |
 | :--- | :--- | :--- | :--- |
-| **Connectivity** | `APP_URL`, `S3_URL` | `config.json` (local) / `.env` | `config.json` (production) |
-| **Logic** | `APP_DEBUG`, `APP_ENV` | `.env` | `config.json` (production) |
-| **Secrets** | `DB_PASSWORD`, `APP_KEY` | `.env` (isi manual/default) | **CI/CD Repository Secrets** |
+| **Connectivity** | `SERVICE_SERVER_URL`, `S3_URL` | `config.json` (local) / `.env` | `config.json` (production) |
+| **Logic** | `SERVICE_SERVER_DEBUG`, `SERVICE_SERVER_ENV` | `.env` | `config.json` (production) |
+| **Secrets** | `DB_PASSWORD`, `SERVICE_SERVER_KEY` | `.env` (isi manual/default) | **CI/CD Repository Secrets** |
 | **Infrastructure** | `MYSQL_ROOT_PASSWORD` | `.env` | **CI/CD Repository Secrets** |
 
 Dengan metode ini:

@@ -1,6 +1,6 @@
 import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../src/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 
 export default function Guest() {

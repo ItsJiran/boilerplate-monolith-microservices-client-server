@@ -32,15 +32,15 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            'key' => env('REVERB_APP_KEY'),
-            'secret' => env('REVERB_APP_SECRET'),
-            'id' => env('REVERB_APP_ID'),
-            'app_id' => env('REVERB_APP_ID'),
+            'key' => env('SERVICE_REVERB_APP_KEY'),
+            'secret' => env('SERVICE_REVERB_APP_SECRET'),
+            'id' => env('SERVICE_REVERB_APP_ID'),
+            'app_id' => env('SERVICE_REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_URL'),
+                'host' => env('SERVICE_REVERB_URL'),
                 'port' => 443,
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                'scheme' => env('SERVICE_REVERB_SCHEME', 'https'),
+                'useTLS' => env('SERVICE_REVERB_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html

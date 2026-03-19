@@ -1,9 +1,9 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../src/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
-  const { user, login, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
 
   return (

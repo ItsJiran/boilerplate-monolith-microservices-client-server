@@ -51,9 +51,9 @@ export STEP_CA_ADDRESS=${STEP_CA_ADDRESS:-":9000"}
 
 # Check if network exists
 echo -e "${BLUE}Checking Docker network...${NC}"
-if ! docker network inspect ${APP_NETWORK:-app_boilerplate_network} >/dev/null; then
-    echo -e "${YELLOW}Creating ${APP_NETWORK:-app_boilerplate_network}...${NC}"
-    docker network create ${APP_NETWORK:-app_boilerplate_network}
+if ! docker network inspect ${SERVICE_NETWORK:-app_boilerplate_network} >/dev/null; then
+    echo -e "${YELLOW}Creating ${SERVICE_NETWORK:-app_boilerplate_network}...${NC}"
+    docker network create ${SERVICE_NETWORK:-app_boilerplate_network}
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Network created successfully${NC}"
     else

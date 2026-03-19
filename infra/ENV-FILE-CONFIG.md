@@ -146,8 +146,8 @@ nano .env
 
 ### Core Variables (.env)
 - `COMPOSE_PROJECT_NAME`
-- `APP_NAME`, `APP_ENV`, `APP_DEBUG`
-- `APP_URL`, `API_URL`
+- `SERVICE_SERVER_NAME`, `SERVICE_SERVER_ENV`, `SERVICE_SERVER_DEBUG`
+- `SERVICE_SERVER_URL`, `SERVICE_API_URL`
 - Port mappings
 - SSL configuration
 

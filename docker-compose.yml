@@ -98,7 +98,7 @@ services:
       PMA_PORT: ${DB_PORT}
       PMA_AUTH_TYPE: cookie
       PMA_ARBITRARY: 1
-      PMA_ABSOLUTE_URI: ${PMA_ABSOLUTE_URI}
+      PMA_ABSOLUTE_URI: ${SERVICE_PMA_ABSOLUTE_URI}
     expose:
       - "80"
     networks:
@@ -152,10 +152,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0}'
-          memory: '${SERVER_MEM_LIMIT:-0b}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-0b}'
     expose:
-      - "${APP_PORT}"
+      - "${SERVICE_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -167,7 +167,7 @@ services:
       - ./step-ca-public-root.pem:/usr/local/share/ca-certificates/step-ca-public-root.crt:ro
     extra_hosts:
       - "${REVERB_EXTRA_HOST:-reverb.myapp.test}:host-gateway"
-      - "${API_EXTRA_HOST:-api.myapp.test}:host-gateway"
+      - "${SERVICE_API_EXTRA_HOST:-api.myapp.test}:host-gateway"
     restart: unless-stopped
     working_dir: /var/www/html
     logging:
@@ -184,10 +184,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0}'
-          memory: '${SERVER_MEM_LIMIT:-0b}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-0b}'
     expose:
-      - "${APP_PORT}"
+      - "${SERVICE_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -209,15 +209,15 @@ services:
     build:
       context: ./core-servers/app-server
       dockerfile: ./Dockerfile.dev
-    command: php artisan reverb:start --host=0.0.0.0 --port=${REVERB_SERVER_PORT} --debug
+    command: php artisan reverb:start --host=0.0.0.0 --port=${SERVICE_REVERB_SERVER_PORT} --debug
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0}'
-          memory: '${SERVER_MEM_LIMIT:-0b}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-0b}'
     expose:
-      - "${APP_PORT}"
-      - "${REVERB_SERVER_PORT}"
+      - "${SERVICE_SERVER_PORT}"
+      - "${SERVICE_REVERB_SERVER_PORT}"
     env_file:
       - ./.env
       - ./.env.backend
@@ -243,8 +243,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${SERVER_CPU_LIMIT:-0}'
-          memory: '${SERVER_MEM_LIMIT:-0b}'
+          cpus: '${SERVICE_SERVER_CPU_LIMIT:-0}'
+          memory: '${SERVICE_SERVER_MEM_LIMIT:-0b}'
     env_file:
       - ./.env
       - ./.env.backend
@@ -276,8 +276,8 @@ services:
       - ./.env.backend
       - ./.env.devops  
     ports:
-      - "${LOAD_BALANCER_PORT}:80"
-      - "${LOAD_BALANCER_HMR_PORT}:${LOAD_BALANCER_HMR_PORT}"
+      - "${SERVICE_LOAD_BALANCER_PORT}:80"
+      - "${SERVICE_LOAD_BALANCER_HMR_PORT}:${SERVICE_LOAD_BALANCER_HMR_PORT}"
     volumes:
       - ./infra/nginx/default.conf.lb.template:/etc/nginx/templates/default.conf.template:ro,Z
       - /etc/letsencrypt:/etc/letsencrypt
@@ -306,40 +306,20 @@ services:
     env_file:
       - ./.env
     environment:
-      - NODE_ENV=development
-      - PORT=3000
+      - NODE_ENV=${SERVICE_SERVER_ENV}
+      - PORT=${SERVICE_CLIENT_WEB_PORT}
     networks:
       - app_network
     extra_hosts:
-      - "${API_DOMAIN}:host-gateway"
-      - "${REVERB_DOMAIN}:host-gateway"
+      - "${SERVICE_API_DOMAIN}:host-gateway"
+      - "${SERVICE_REVERB_DOMAIN}:host-gateway"
 
   # ---- CLIENT MOBILE (Expo)
-  client-mobile:
-    build:
-      context: .
-      dockerfile: ./core-clients/app-client/apps/mobile/Dockerfile.dev
-    container_name: client-mobile
-    command: pnpm start --filter mobile --host
-    ports:
-      - "19000:19000"
-      - "19001:19001"
-      - "19002:19002"
-      - "8081:8081" # Metro bundler
-    volumes:
-      - ./core-clients/app-client:/app/core-clients/app-client
-    env_file:
-      - ./.env
-    environment:
-      - NODE_ENV=development
-      - REDACT_LOGS=1
-      # Expo/Metro environment variables
-      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost 
-    networks:
-      - app_network
-    extra_hosts:
-      - "${API_DOMAIN}:host-gateway"
+  # Mobile development is run manually on host (no Docker container).
+  # Use:
+  #   ./run.sh run.mobile.dev.sh
+  # or:
+  #   bash scripts/run/run.mobile.dev.sh
 
   # ==========================================
   # 1. MINIO SERVICE (The S3 Server)
@@ -423,7 +403,7 @@ services:
 
 networks:
   app_network:
-    name: ${APP_NETWORK:-app_boilerplate_network}
+    name: ${SERVICE_NETWORK:-app_boilerplate_network}
     external: true
 
 volumes:
@@ -435,7 +415,7 @@ volumes:
     name: ${REDIS_VOLUME_NAME}
   app-storage:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-storage
+    name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-storage
   app-minio-data:
     driver: local
     name: ${MINIO_VOLUME_NAME}

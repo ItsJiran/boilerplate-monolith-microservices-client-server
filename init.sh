@@ -24,16 +24,6 @@ source ./.env
 source ./.env.backend 
 source ./.env.devops
 
-# Fallback jika APP_SLUG kosong/ketimpa oleh file env lain.
-APP_SLUG_SAFE="${APP_SLUG:-}"
-if [ -z "$APP_SLUG_SAFE" ]; then
-	APP_SLUG_SAFE="$(printf '%s' "${APP_DOMAIN:-app}" | sed -E 's~^https?://~~; s~/.*$~~; s/\..*$//; s/[^A-Za-z0-9_-]+/-/g; s/^-+|-+$//g')"
-fi
-[ -z "$APP_SLUG_SAFE" ] && APP_SLUG_SAFE="app"
-
-SSL_CERT_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.pem"
-SSL_KEY_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.key"
-
 # ----------------------------------------------------------
 # Step 2: Run the step-ca workflow
 
@@ -42,29 +32,29 @@ SSL_KEY_PATH="/etc/nginx/ssl/${APP_SLUG_SAFE}.key"
 # ----------------------------------------------------------
 # Step 3: Run the dns workflow to setup dns records for the application
 
-./run.sh run.dev.ssl.sh
+./run.sh run.dev.ssl.sh --domains="${SERVICE_SERVER_DOMAIN},${SERVICE_PMA_DOMAIN},${SERVICE_S3_DOMAIN},${SERVICE_S3_CONSOLE_DOMAIN},${SERVICE_REVERB_DOMAIN},${HMR_DOMAIN}" --output-dir="/etc/nginx/ssl"
 ./run.sh run.dev.ssl.ca.sh
-./run.sh run.dev.ssl.verify.sh
+# ./run.sh run.dev.ssl.verify.sh
 
 # ----------------------------------------------------------
 # Step 4: Buat template untuk nginx-host (vps) 
 
-./setup.sh setup-nginx-host-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-./setup.sh setup-nginx-host-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-./setup.sh setup-nginx-host-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
-./setup.sh setup-nginx-host-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}" --ssl-cert="$SSL_CERT_PATH" --ssl-key="$SSL_KEY_PATH"
+./setup.sh setup-nginx-host-template.sh --single --service=app --domain="${SERVICE_SERVER_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${SERVICE_SERVER_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${SERVICE_SERVER_DOMAIN}.key"
+./setup.sh setup-nginx-host-template.sh --single --service=pma --domain="${SERVICE_PMA_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${SERVICE_PMA_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${SERVICE_PMA_DOMAIN}.key"
+./setup.sh setup-nginx-host-template.sh --single --service=s3 --domain="${SERVICE_S3_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${SERVICE_S3_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${SERVICE_S3_DOMAIN}.key"
+./setup.sh setup-nginx-host-template.sh --single --service=s3-console --domain="${SERVICE_S3_CONSOLE_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${SERVICE_S3_CONSOLE_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${SERVICE_S3_CONSOLE_DOMAIN}.key"
+./setup.sh setup-nginx-host-template.sh --single --service=reverb --domain="${SERVICE_REVERB_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${SERVICE_REVERB_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${SERVICE_REVERB_DOMAIN}.key"
+./setup.sh setup-nginx-host-template.sh --single --service=hmr --domain="${HMR_DOMAIN}" --ssl-cert="/etc/nginx/ssl/${HMR_DOMAIN}.pem" --ssl-key="/etc/nginx/ssl/${HMR_DOMAIN}.key"
 
 # ----------------------------------------------------------
 # Step 5: Konfigurasi nginx untuk nginx-lb (docker) 
 
-./setup.sh setup-nginx-template.sh --single --service=app --domain="${APP_DOMAIN:-${APP_URL:-app.test}}"
-./setup.sh setup-nginx-template.sh --single --service=pma --domain="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-pma.${APP_DOMAIN:-app.test}}}"
-./setup.sh setup-nginx-template.sh --single --service=s3 --domain="${S3_DOMAIN:-${S3_URL:-s3.${APP_DOMAIN:-app.test}}}"
-./setup.sh setup-nginx-template.sh --single --service=s3-console --domain="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${APP_DOMAIN:-app.test}}}"
-./setup.sh setup-nginx-template.sh --single --service=reverb --domain="${REVERB_DOMAIN:-${REVERB_URL:-reverb.${APP_DOMAIN:-app.test}}}"
-./setup.sh setup-nginx-template.sh --single --service=hmr --domain="${HMR_DOMAIN:-${HMR_URL:-hmr.${APP_DOMAIN:-app.test}}}"
+./setup.sh setup-nginx-template.sh --single --service=app --domain="${SERVICE_SERVER_DOMAIN}"
+./setup.sh setup-nginx-template.sh --single --service=pma --domain="${SERVICE_PMA_DOMAIN}"
+./setup.sh setup-nginx-template.sh --single --service=s3 --domain="${SERVICE_S3_DOMAIN}"
+./setup.sh setup-nginx-template.sh --single --service=s3-console --domain="${SERVICE_S3_CONSOLE_DOMAIN}"
+./setup.sh setup-nginx-template.sh --single --service=reverb --domain="${SERVICE_REVERB_DOMAIN}"
+./setup.sh setup-nginx-template.sh --single --service=hmr --domain="${HMR_DOMAIN}"
 
 # ----------------------------------------------------------
 # Step 6: Setup the host template into the etc nginx and also setup to the host file (for local development)

@@ -11,6 +11,7 @@ export function Layout({ children, pageContext }: { children: React.ReactNode, p
         <a href="/ssr-test" style={{ marginRight: '10px' }}>SSR Test</a>
         <a href="/guest" style={{ marginRight: '10px' }}>Guest Page</a>
         <a href="/protected" style={{ marginRight: '10px' }}>Protected Page</a>
+        <a href="/infra" style={{ marginRight: '10px' }}>Infra</a>
         {user ? (
           <span style={{ marginLeft: '20px' }}>Hello, {user.name}</span>
         ) : (

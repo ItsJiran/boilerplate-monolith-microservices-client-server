@@ -1,162 +1,203 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# --- Setup path & env ---
+# =========================================================
+# DEVELOPMENT SSL SETUP (STEP CA)
+# =========================================================
+# Usage examples:
+#   ./run.dev.ssl.sh --domain=app.test
+#   ./run.dev.ssl.sh --domains=app.test,pma.app.test,s3.app.test --output-dir=/etc/nginx/ssl
+# =========================================================
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+DOMAINS=()
+OUTPUT_DIR="/etc/nginx/ssl"
+CA_URL_ARG=""
+
+usage() {
+  cat <<EOF
+Usage: $0 [options]
+
+Options:
+  --domain=VALUE       Domain/URL manual (boleh berulang)
+  --domains=LIST       Daftar domain (comma separated)
+  --output-dir=PATH    Direktori output cert/key (default: /etc/nginx/ssl)
+  --ca-url=URL         Override STEP_CA_URL
+  --help               Tampilkan bantuan
+EOF
+}
+
+extract_host() {
+  local value="$1"
+  local host="$value"
+  host="${host#http://}"
+  host="${host#https://}"
+  host="${host%%/*}"
+  host="${host%%:*}"
+  printf '%s\n' "$host"
+}
+
+add_domain_unique() {
+  local candidate
+  candidate="$(extract_host "$1")"
+  [ -z "$candidate" ] && return
+
+  local existing
+  for existing in "${DOMAINS[@]}"; do
+    [ "$existing" = "$candidate" ] && return
+  done
+  DOMAINS+=("$candidate")
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --domains=*)
+      IFS=',' read -r -a domain_list <<< "${1#*=}"
+      for item in "${domain_list[@]}"; do
+        add_domain_unique "$item"
+      done
+      ;;
+    --domain=*|--url=*) add_domain_unique "${1#*=}" ;;
+    --domain|--url) add_domain_unique "$2"; shift ;;
+    --output-dir=*) OUTPUT_DIR="${1#*=}" ;;
+    --output-dir) OUTPUT_DIR="$2"; shift ;;
+    --ca-url=*) CA_URL_ARG="${1#*=}" ;;
+    --ca-url) CA_URL_ARG="$2"; shift ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}[ERROR] Unknown parameter: $1${NC}"
+      usage
+      exit 1
+      ;;
+  esac
+  shift
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 ENV_FILE="$ROOT_DIR/.env"
 
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "❌ File .env tidak ditemukan di $ENV_FILE" >&2
+  echo -e "${RED}[ERROR] File .env tidak ditemukan di $ENV_FILE${NC}" >&2
   exit 1
 fi
 
-set -a; . "$ENV_FILE"; set +a
+set -a
+source "$ENV_FILE"
+[ -f "$ROOT_DIR/.env.backend" ] && source "$ROOT_DIR/.env.backend"
+[ -f "$ROOT_DIR/.env.devops" ] && source "$ROOT_DIR/.env.devops"
+set +a
 
-if [[ -z "${APP_DOMAIN:-}" ]]; then
-  echo '❌ APP_DOMAIN harus ada di .env' >&2
-  exit 1
+if [ -z "$CA_URL_ARG" ]; then
+  STEP_CA_PORT="${STEP_CA_PORT:-9000}"
+  CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
+else
+  CA_URL="$CA_URL_ARG"
 fi
 
-# --- Konfigurasi Step CA ---
-STEP_CA_PORT="${STEP_CA_PORT:-9000}"
 STEP_CA_PROVISIONER="${STEP_CA_PROVISIONER:-admin}"
 STEP_CA_PASSWORD="${STEP_CA_PASSWORD:-changeme}"
-CONTAINER_NAME="${APP_SLUG:-app-boilerplate}-step-ca"
-CA_URL="${STEP_CA_URL:-https://localhost:${STEP_CA_PORT}}"
-
-# --- Penamaan file ---
-SAFE_APP_NAME="${APP_NAME:-$APP_DOMAIN}"
-SAFE_APP_NAME="${SAFE_APP_NAME// /-}"
-SAFE_APP_NAME="${SAFE_APP_NAME,,}"
-
-CSR_LOCAL="$ROOT_DIR/gen-${SAFE_APP_NAME}.csr"
-KEY_LOCAL="$ROOT_DIR/gen-${SAFE_APP_NAME}.key"
-CERT_LOCAL="$ROOT_DIR/gen-${SAFE_APP_NAME}.crt"
+CONTAINER_NAME="${SERVICE_SERVER_SLUG:-app-boilerplate}-step-ca"
 ROOT_CA_FILE="$ROOT_DIR/step-ca-public-root.pem"
 
-echo "=========================================================="
-echo "          MEMBUAT SSL CERTIFICATE SECARA LOKAL            "
-echo "=========================================================="
+if [ ${#DOMAINS[@]} -eq 0 ]; then
+  add_domain_unique "${SERVICE_SERVER_DOMAIN:-${SERVICE_SERVER_URL:-app.test}}"
+  add_domain_unique "${SERVICE_PMA_DOMAIN:-${SERVICE_PMA_ABSOLUTE_URI:-pma.${SERVICE_SERVER_DOMAIN:-app.test}}}"
+  add_domain_unique "${SERVICE_S3_DOMAIN:-${S3_URL:-s3.${SERVICE_SERVER_DOMAIN:-app.test}}}"
+  add_domain_unique "${SERVICE_S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-s3-console.${SERVICE_SERVER_DOMAIN:-app.test}}}"
+  add_domain_unique "${SERVICE_REVERB_DOMAIN:-${SERVICE_REVERB_URL:-reverb.${SERVICE_SERVER_DOMAIN:-app.test}}}"
+  add_domain_unique "${HMR_DOMAIN:-${SERVICE_HMR_URL:-hmr.${SERVICE_SERVER_DOMAIN:-app.test}}}"
+fi
 
-# 1. Pastikan container CA menyala
+if [ ${#DOMAINS[@]} -eq 0 ]; then
+  echo -e "${RED}[ERROR] Domain list kosong.${NC}"
+  exit 1
+fi
+
+echo -e "${BLUE}=========================================================${NC}"
+echo -e "${BLUE}        DEVELOPMENT SSL AUTO-PROVISIONING (STEP CA)      ${NC}"
+echo -e "${BLUE}=========================================================${NC}"
+echo -e "Domains    : ${YELLOW}${DOMAINS[*]}${NC}"
+echo -e "Output dir : ${YELLOW}${OUTPUT_DIR}${NC}"
+echo -e "CA URL     : ${YELLOW}${CA_URL}${NC}"
+echo ""
+
 if ! docker inspect --format '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q true; then
-  echo "❌ Container '$CONTAINER_NAME' tidak berjalan. Silahkan nyalakan Step CA." >&2
+  echo -e "${RED}[ERROR] Container '$CONTAINER_NAME' tidak berjalan.${NC}" >&2
   exit 1
 fi
 
-# ==========================================================
-# Pastikan tidak ada file lama yang terkunci oleh root
-# hal ini terjadi jika script sebelumnya dijalankan via sudo
-# ==========================================================
-for file in "$KEY_LOCAL" "$CSR_LOCAL" "$CERT_LOCAL" "$ROOT_CA_FILE"; do
-    if [ -f "$file" ] && [ ! -w "$file" ]; then
-        echo "⚠️  Menghapus file lama yang terkunci oleh root: $file"
-        sudo rm -f "$file"
-    fi
-done
-
-echo ""
-echo "🔐 1. Mengunduh Public Root CA dari Step CA..."
-# Download root public key (step-ca-public-root.pem)
+echo -e "${YELLOW}[1/3] Download Root CA...${NC}"
 curl -s -k "${CA_URL}/roots.pem" > "$ROOT_CA_FILE"
-
 if [[ ! -s "$ROOT_CA_FILE" ]]; then
-  echo "❌ Gagal mengunduh Root CA dari ${CA_URL}/roots.pem" >&2
+  echo -e "${RED}[ERROR] Gagal mengunduh Root CA dari ${CA_URL}/roots.pem${NC}" >&2
   exit 1
 fi
 
-echo ""
-echo "🔐 2. Membuat Server CSR & Private Key lokal (gen-${SAFE_APP_NAME})..."
-# Kumpulkan semua URL dari .env sebagai SAN
-SANS=()
-for VAR in API_URL REVERB_URL S3_URL S3_CONSOLE_URL HMR_URL; do
-  VAL="${!VAR:-}"
-  if [[ -n "$VAL" ]]; then
-    SANS+=("--san" "$VAL")
+echo -e "${YELLOW}[2/3] Generate SSL per domain...${NC}"
+sudo mkdir -p "$OUTPUT_DIR"
+
+FAILED_DOMAINS=()
+for DOMAIN in "${DOMAINS[@]}"; do
+  echo -e "${BLUE}  -> $DOMAIN${NC}"
+
+  SAFE_NAME="${DOMAIN// /-}"
+  SAFE_NAME="${SAFE_NAME,,}"
+
+  CSR_LOCAL="$ROOT_DIR/gen-${SAFE_NAME}.csr"
+  KEY_LOCAL="$ROOT_DIR/gen-${SAFE_NAME}.key"
+  CERT_LOCAL="$ROOT_DIR/gen-${SAFE_NAME}.crt"
+
+  rm -f "$CSR_LOCAL" "$KEY_LOCAL" "$CERT_LOCAL"
+
+  if ! step-cli certificate create "$DOMAIN" "$CSR_LOCAL" "$KEY_LOCAL" \
+    --csr --insecure --no-password --force \
+    --san "$DOMAIN" \
+    --san "localhost" \
+    --san "127.0.0.1"; then
+    FAILED_DOMAINS+=("$DOMAIN")
+    continue
   fi
-done
-SANS+=("--san" "$APP_DOMAIN")
-SANS+=("--san" "*.$APP_DOMAIN")
-SANS+=("--san" "localhost")
-SANS+=("--san" "127.0.0.1")
 
-step-cli certificate create "$APP_DOMAIN" "$CSR_LOCAL" "$KEY_LOCAL" \
-  --csr --insecure --no-password --force "${SANS[@]}"
-
-echo ""
-echo "🔐 3. Signing Server CSR via HTTP ke Step CA..."
-echo "$STEP_CA_PASSWORD" | step-cli ca sign "$CSR_LOCAL" "$CERT_LOCAL" \
-  --ca-url "$CA_URL" --root "$ROOT_CA_FILE" \
-  --provisioner "$STEP_CA_PROVISIONER" \
-  --provisioner-password-file /dev/stdin --force
-
-# --- Mengkonfigurasi Nginx SSL ---
-SSL_DIR="/etc/nginx/ssl"
-CERT_FILE="$SSL_DIR/${SAFE_APP_NAME}.pem"
-KEY_FILE="$SSL_DIR/${SAFE_APP_NAME}.key"
-
-echo ""
-echo "🔐 4. Mengkonfigurasi Nginx SSL (Membutuhkan akses Sudo)..."
-sudo mkdir -p "$SSL_DIR"
-sudo cp "$CERT_LOCAL" "$CERT_FILE"
-sudo cp "$KEY_LOCAL" "$KEY_FILE"
-# Abaikan error jika user nginx belum ada di host
-sudo chown nginx:nginx "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
-sudo chmod 640 "$CERT_FILE" "$KEY_FILE" 2>/dev/null || true
-
-# --- Update .env ---
-update_env_var() {
-  local key="$1" value="$2"
-  
-  # 1. Cek apakah key sudah ada
-  if grep -qE "^${key}=" "$ENV_FILE"; then
-    # REPLACE MODE
-    # Coba sebagai user biasa dulu karena .env ada di user space
-    sed -i -E "s#^${key}=.*#${key}=${value}#" "$ENV_FILE" 2>/dev/null || \
-    sudo sed -i -E "s#^${key}=.*#${key}=${value}#" "$ENV_FILE"
-  else
-    # APPEND MODE
-    # Pastikan file berakhir dengan newline agar tidak menimpa baris terakhir
-    if [ -w "$ENV_FILE" ]; then
-         if [ -n "$(tail -c1 "$ENV_FILE")" ]; then echo "" >> "$ENV_FILE"; fi
-         echo "${key}=${value}" >> "$ENV_FILE"
-    else
-         # Fallback sudo: Cek last char via sudo tail
-         if [ -n "$(sudo tail -c1 "$ENV_FILE")" ]; then echo "" | sudo tee -a "$ENV_FILE" >/dev/null; fi
-         echo "${key}=${value}" | sudo tee -a "$ENV_FILE" >/dev/null
-    fi
+  if ! echo "$STEP_CA_PASSWORD" | step-cli ca sign "$CSR_LOCAL" "$CERT_LOCAL" \
+    --ca-url "$CA_URL" \
+    --root "$ROOT_CA_FILE" \
+    --provisioner "$STEP_CA_PROVISIONER" \
+    --provisioner-password-file /dev/stdin \
+    --force; then
+    FAILED_DOMAINS+=("$DOMAIN")
+    continue
   fi
-}
 
-update_env_var "SSL_CERT_PATH" "$CERT_FILE"
-update_env_var "SSL_KEY_PATH" "$KEY_FILE"
-update_env_var "NODE_EXTRA_CA_CERTS" "$ROOT_CA_FILE"
+  CERT_FILE="${OUTPUT_DIR%/}/${DOMAIN}.pem"
+  KEY_FILE="${OUTPUT_DIR%/}/${DOMAIN}.key"
 
-echo ""
-echo "🔐 7. Menyalin file sertifikat ke direktori build kontainer (app-server & app-clients)..."
-for BUILD_CTX_DIR in "$ROOT_DIR/app"; do
-  if [[ -d "$BUILD_CTX_DIR" ]]; then
-    # Fallback aman ke sudo bila file lama terkunci root
-    cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem" 2>/dev/null || sudo cp "$ROOT_CA_FILE" "$BUILD_CTX_DIR/step-ca-public-root.pem"
-    sudo chown "${USER:-$(id -un)}:${USER:-$(id -gn)}" "$BUILD_CTX_DIR/step-ca-public-root.pem" 2>/dev/null || true
-    
-    cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt" 2>/dev/null || sudo cp "$CERT_LOCAL" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt"
-    sudo chown "${USER:-$(id -un)}:${USER:-$(id -gn)}" "$BUILD_CTX_DIR/gen-${SAFE_APP_NAME}.crt" 2>/dev/null || true
-    
-    echo "✅ Disalin ke: $BUILD_CTX_DIR/"
-  fi
+  cat "$CERT_LOCAL" "$ROOT_CA_FILE" | sudo tee "$CERT_FILE" >/dev/null
+  sudo cp "$KEY_LOCAL" "$KEY_FILE"
+
+  rm -f "$CSR_LOCAL" "$KEY_LOCAL" "$CERT_LOCAL"
 done
 
-echo ""
-echo "✅ BERHASIL! Script Selesai Dijalankan."
-echo "   - Root Public CA  : $ROOT_CA_FILE"
-echo "   - Server Cert     : $CERT_LOCAL"
-echo "   - Nginx Cert      : $CERT_FILE"
-echo ""
-echo "📋 Generate nginx host config dengan cert ini (shared SAN cert untuk semua domain):"
-echo "   bash scripts/setup/setup-nginx-host.sh \\"
-echo "     --app-domain=\$APP_DOMAIN \\"
-echo "     --ssl-cert=$CERT_FILE \\"
-echo "     --ssl-key=$KEY_FILE \\"
-echo "     [--reverb-domain=... --s3-domain=... --hmr-domain=... --dry-run]"
+echo -e "${YELLOW}[3/3] Cleanup...${NC}"
+rm -f "$ROOT_CA_FILE"
+
+if [ ${#FAILED_DOMAINS[@]} -eq 0 ]; then
+  echo -e "${GREEN}SUCCESS! Certificates generated for: ${DOMAINS[*]}${NC}"
+  echo ""
+  echo "Generated files:"
+  for DOMAIN in "${DOMAINS[@]}"; do
+    echo "  - ${OUTPUT_DIR%/}/${DOMAIN}.pem"
+    echo "  - ${OUTPUT_DIR%/}/${DOMAIN}.key"
+  done
+else
+  echo -e "${RED}FAILED for: ${FAILED_DOMAINS[*]}${NC}"
+  exit 1
+fi

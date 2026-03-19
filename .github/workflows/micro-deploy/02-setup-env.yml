@@ -11,7 +11,7 @@ name: "⚙️ [Micro Deploy 2/6] Setup Environment"
 #   DEPLOY_PATH, DEPLOY_SSH_PORT, DEPLOY_SSH_KNOWN_HOSTS
 #
 # Required Secrets (App):
-#   APP_KEY              - Laravel app key
+#   SERVICE_SERVER_KEY              - Laravel app key
 #   DB_PASSWORD          - Database user password
 #   DB_ROOT_PASSWORD     - Database root password
 #   REDIS_PASSWORD       - Redis password
@@ -58,7 +58,7 @@ jobs:
       DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
       # App secrets passed through to server
-      SECRET_APP_KEY:             ${{ secrets.APP_KEY }}
+      SECRET_APP_KEY:             ${{ secrets.SERVICE_SERVER_KEY }}
       SECRET_DB_PASSWORD:         ${{ secrets.DB_PASSWORD }}
       SECRET_DB_ROOT_PASSWORD:    ${{ secrets.DB_ROOT_PASSWORD }}
       SECRET_REDIS_PASSWORD:      ${{ secrets.REDIS_PASSWORD }}
@@ -82,7 +82,7 @@ jobs:
         # Writing secrets to a file avoids them appearing in `ps aux` on server
         run: |
           {
-            [ -n "$SECRET_APP_KEY" ]             && printf 'APP_KEY=%s\n'             "$SECRET_APP_KEY"
+            [ -n "$SECRET_APP_KEY" ]             && printf 'SERVICE_SERVER_KEY=%s\n'             "$SECRET_APP_KEY"
             [ -n "$SECRET_DB_PASSWORD" ]          && printf 'DB_PASSWORD=%s\n'         "$SECRET_DB_PASSWORD"
             [ -n "$SECRET_DB_ROOT_PASSWORD" ]     && printf 'MARIADB_ROOT_PASSWORD=%s\n' "$SECRET_DB_ROOT_PASSWORD"
             [ -n "$SECRET_REDIS_PASSWORD" ]       && printf 'REDIS_PASSWORD=%s\n'      "$SECRET_REDIS_PASSWORD"

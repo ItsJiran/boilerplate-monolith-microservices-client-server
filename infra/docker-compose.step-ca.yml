@@ -28,7 +28,7 @@ version: '3.8'
 services:
   step-ca:
     image: smallstep/step-ca:latest
-    container_name: ${APP_SLUG:-app-boilerplate}-step-ca
+    container_name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-step-ca
     restart: unless-stopped
     
     ports:
@@ -65,10 +65,10 @@ services:
 
 networks:
   app_network:
-    name: ${APP_NETWORK:-app_boilerplate_network}
+    name: ${SERVICE_NETWORK:-app_boilerplate_network}
     external: true
 
 volumes:
   step-ca-data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-step-ca-data
+    name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-step-ca-data

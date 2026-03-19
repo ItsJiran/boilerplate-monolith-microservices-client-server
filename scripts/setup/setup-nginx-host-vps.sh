@@ -115,7 +115,7 @@ load_env "$ROOT_DIR/.env.backend"
 load_env "$ROOT_DIR/.env.devops"
 
 if [ -z "$FILE_NAME" ]; then
-  default_name="${NGINX_HOST_FILE_NAME:-${APP_DOMAIN:-default}}"
+  default_name="${NGINX_HOST_FILE_NAME:-${SERVICE_SERVER_DOMAIN:-default}}"
   FILE_NAME="$default_name"
 fi
 

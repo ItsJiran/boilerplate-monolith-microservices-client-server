@@ -1,8 +1,8 @@
-// src/hooks/useAuth.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { api } from '@repo/common/api';
 
-// Mocked Auth Context mimicking web session
 interface User {
+  id?: number;
   name: string;
   email: string;
 }
@@ -10,8 +10,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -19,18 +19,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false); // Simulate async login
+  const [loading, setLoading] = useState(false);
 
-  const login = (email: string) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
-    setTimeout(() => {
-      setUser({ name: 'Test User', email });
+    try {
+      await api.get('/sanctum/csrf-cookie');
+
+      const response = (await api.post('/login', {
+        email,
+        password,
+      })) as { data?: { user?: User }; user?: User };
+
+      const authenticatedUser = response?.data?.user ?? response?.user;
+      if (authenticatedUser) {
+        setUser(authenticatedUser);
+      } else {
+        // Fallback if API doesn't return full user payload.
+        setUser({ name: email.split('@')[0] || 'User', email });
+      }
+    } finally {
       setLoading(false);
-    }, 1000); // Simulate API call
+    }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/logout');
+    } finally {
+      setUser(null);
+    }
   };
 
   return (

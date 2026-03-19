@@ -11,6 +11,15 @@ const root = `${__dirname}/..`;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+function normalizeRequestHeaders(headers: Record<string, string | string[] | undefined>) {
+  return Object.fromEntries(
+    Object.entries(headers).map(([key, value]) => [
+      key.toLowerCase(),
+      Array.isArray(value) ? value.join('; ') : value,
+    ])
+  );
+}
+
 async function startServer() {
   const app = express();
 
@@ -37,7 +46,7 @@ async function startServer() {
   app.get('*', async (req, res, next) => {
     const pageContextInit = {
       urlOriginal: req.originalUrl,
-      headers: req.headers, 
+      headers: normalizeRequestHeaders(req.headers),
     };
 
     const pageContext = await renderPage(pageContextInit);

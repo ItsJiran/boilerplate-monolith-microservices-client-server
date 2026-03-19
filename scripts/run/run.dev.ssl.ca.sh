@@ -19,7 +19,7 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 
 ROOT_CA_FILE="${ROOT_CA_FILE:-$ROOT_DIR/step-ca-public-root.pem}"
-SAFE_APP_NAME="${APP_NAME:-app-boilerplate}"
+SAFE_APP_NAME="${SERVICE_SERVER_NAME:-app-boilerplate}"
 SAFE_APP_NAME="${SAFE_APP_NAME// /-}"
 SAFE_APP_NAME="${SAFE_APP_NAME,,}"
 CERT_NICKNAME="${SAFE_APP_NAME}-step-ca"

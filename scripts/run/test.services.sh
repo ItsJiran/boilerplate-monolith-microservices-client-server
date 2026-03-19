@@ -29,7 +29,7 @@ else
     exit 1
 fi
 
-APP_CONTAINER="${APP_SLUG}-server"
+APP_CONTAINER="${SERVICE_SERVER_SLUG}-server"
 
 function print_result() {
     local status=$1
@@ -44,20 +44,20 @@ function print_result() {
 echo -e "\n${YELLOW}1. Host to External Services (via Nginx/Load Balancer)${NC}"
 
 # Test Main App
-curl -s -k -o /dev/null --fail "https://${APP_DOMAIN}"
-print_result $? "Aplikasi Utama (https://${APP_DOMAIN})"
+curl -s -k -o /dev/null --fail "https://${SERVICE_SERVER_DOMAIN}"
+print_result $? "Aplikasi Utama (https://${SERVICE_SERVER_DOMAIN})"
 
 # Test Reverb (It usually returns 404 for root path, but server responds)
-HTTP_CODE=$(curl -s -k -o /dev/null -w "%{http_code}" "https://reverb.${APP_DOMAIN}")
+HTTP_CODE=$(curl -s -k -o /dev/null -w "%{http_code}" "https://reverb.${SERVICE_SERVER_DOMAIN}")
 if [ "$HTTP_CODE" -eq 404 ] || [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 400 ] || [ "$HTTP_CODE" -eq 426 ]; then
-    print_result 0 "Websocket Reverb (https://reverb.${APP_DOMAIN})"
+    print_result 0 "Websocket Reverb (https://reverb.${SERVICE_SERVER_DOMAIN})"
 else
-    print_result 1 "Websocket Reverb (https://reverb.${APP_DOMAIN}) - Code: $HTTP_CODE"
+    print_result 1 "Websocket Reverb (https://reverb.${SERVICE_SERVER_DOMAIN}) - Code: $HTTP_CODE"
 fi
 
 # Test MinIO
-curl -s -k -o /dev/null --fail "https://minio.${APP_DOMAIN}/minio/health/live"
-print_result $? "MinIO Console Health (https://minio.${APP_DOMAIN})"
+curl -s -k -o /dev/null --fail "https://minio.${SERVICE_SERVER_DOMAIN}/minio/health/live"
+print_result $? "MinIO Console Health (https://minio.${SERVICE_SERVER_DOMAIN})"
 
 echo -e "\n${YELLOW}2. Internal Container Connections (Dari dalam container App/PHP)${NC}"
 

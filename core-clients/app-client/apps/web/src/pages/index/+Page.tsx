@@ -21,6 +21,7 @@ export function Page() {
         <li><a href="/ssr-test">SSR Data Fetching</a> - Fetches data on the server side.</li>
         <li><a href="/protected">Protected Route</a> - Only accessible if authenticated.</li>
         <li><a href="/guest">Guest Route</a> - Accessible to everyone.</li>
+        <li><a href="/infra">Infrastructure</a> - Reverb/Socket and Queue/Scheduler links.</li>
       </ul>
     </>
   );

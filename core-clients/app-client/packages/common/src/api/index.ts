@@ -1,5 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
-export { default as axios, api } from './client';
+export { default as axios, api, createApiClient, createServerApi } from './client';
 export * from './hooks';
 export * from './query-client';
 export * from '@tanstack/react-query';

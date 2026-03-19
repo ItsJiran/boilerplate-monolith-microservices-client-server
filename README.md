@@ -29,14 +29,16 @@
 
 ```
 .
-├── clients/                     # Frontend Clients (Monorepo)
+├── core-clients/                # Frontend Clients (Monorepo)
 │   └── app-client/              # Turbo Repo
+│       ├── .ai/                 # AI Development Guidelines & Patterns
 │       ├── apps/
 │       │   ├── web/             # React Web App
 │       │   └── mobile/          # React Native App
 │       └── packages/            # Shared UI/Configs
-├── servers/                     # Backend Services
+├── core-servers/                # Backend Services
 │   └── app-server/              # Laravel Application (formerly app/)
+│       ├── .ai/                 # AI Development Guidelines & Patterns
 │       ├── app/
 │       │   ├── Http/Controllers/
 │       │   ├── Services/
@@ -60,13 +62,63 @@
 
 ---
 
+## AI-Assisted Development Protocol
+
+To maintain code consistency and architecture standards, AI assistants **MUST** follow the guidelines located within each service's `.ai` directory.
+
+> **MANDATORY:** Before performing **any** development task, the AI must first read **all** `.md` files in the relevant `.ai` directory. This is a non-negotiable first step — do not write or modify any code before completing this read.
+
+---
+
+### Backend Development (Laravel)
+
+**Trigger:** Any task involving `core-servers/app-server/` — API endpoints, services, models, migrations, tests, queues, etc.
+
+**Action:** Immediately read ALL of the following files before doing anything else:
+
+| # | File | Content |
+|---|---|---|
+| 1 | `core-servers/app-server/.ai/1.Architecture.md` | Architecture overview, module structure, communication rules, RBAC |
+| 2 | `core-servers/app-server/.ai/2.Schema-Guidelines.md` | Database schema conventions & naming rules |
+| 3 | `core-servers/app-server/.ai/3.Business-Domains.md` | Business domain logic, module boundaries, Facade/Orchestrator pattern |
+| 4 | `core-servers/app-server/.ai/4.Testing-Guidelines.md` | Test structure per module: Unit, Feature, Integration |
+
+```
+# Shorthand: read everything in one go
+core-servers/app-server/.ai/*.md
+```
+
+---
+
+### Frontend Development (React / React Native)
+
+**Trigger:** Any task involving `core-clients/app-client/` — React web, React Native mobile, shared packages, components, state, routing, etc.
+
+**Action:** Immediately read ALL of the following files before doing anything else:
+
+```
+# Shorthand: read everything in one go
+core-clients/app-client/.ai/*.md
+```
+
+These files contain:
+- Component Structure & State Management Patterns
+- Shared Package Usage Guidelines
+- Turbo Monorepo Practices
+
+---
+
+> **Summary Rule:** Backend task → read `app-server/.ai/*.md` first. Frontend task → read `app-client/.ai/*.md` first. No exceptions.
+
+---
+
 ## Environment Files
 
 The project uses 3 separate env files located in the project root:
 
 | File | Content |
 |---|---|
-| `.env` | Main Config: APP_URL, ports, APP_SLUG, SSL, network |
+| `.env` | Main Config: SERVICE_SERVER_URL, ports, SERVICE_SERVER_SLUG, SSL, network |
 | `.env.backend` | Laravel Config: DB, Redis, Mail, S3, Sanctum, Reverb |
 | `.env.devops` | Monitoring Config: Grafana, Prometheus, Loki, resource limits |
 
@@ -191,7 +243,7 @@ This will:
 - Copy `.env.example` → `.env`, `.env.backend`, `.env.devops` in root.
 - **Auto-sync**: Copy root `.env` + `.env.backend` → `servers/app-server/.env` (required for Laravel).
 
-Edit root files as needed (minimally: `APP_DOMAIN`, `DB_PASSWORD`, `APP_SLUG`).
+Edit root files as needed (minimally: `SERVICE_SERVER_DOMAIN`, `DB_PASSWORD`, `SERVICE_SERVER_SLUG`).
 
 ### 2. Setup Local Hosts
 
@@ -379,7 +431,7 @@ For non-interactive (CI/deploy), you can run selected services modularly:
 
 ## Access Services
 
-> Adjust according to `APP_URL` and other domains in `.env`.
+> Adjust according to `SERVICE_SERVER_URL` and other domains in `.env`.
 
 | Service | Default URL |
 |---|---|
@@ -448,10 +500,10 @@ docker compose -f infra/docker-compose.step-ca.yml up -d
 docker logs -f step-ca
 
 # === ARTISAN ===
-docker exec -it ${APP_SLUG}-server php artisan migrate
-docker exec -it ${APP_SLUG}-server php artisan db:seed
-docker exec -it ${APP_SLUG}-server php artisan queue:restart
-docker exec -it ${APP_SLUG}-server php artisan tinker
+docker exec -it ${SERVICE_SERVER_SLUG}-server php artisan migrate
+docker exec -it ${SERVICE_SERVER_SLUG}-server php artisan db:seed
+docker exec -it ${SERVICE_SERVER_SLUG}-server php artisan queue:restart
+docker exec -it ${SERVICE_SERVER_SLUG}-server php artisan tinker
 ```
 
 ---
@@ -461,7 +513,7 @@ docker exec -it ${APP_SLUG}-server php artisan tinker
 - All services have CPU/Memory resource limits via `deploy.resources.limits` — set in `.env.devops`
 - Log rotation: max `5MB × 2 file` per container (json-file driver)
 - Docker networks are `external` — created manually or automatically by run scripts
-- The `APP_SLUG` variable is used as a prefix for container names, volumes, and networks
+- The `SERVICE_SERVER_SLUG` variable is used as a prefix for container names, volumes, and networks
 - Setup scripts can be run individually or all at once (`./setup.sh` → `A`)
 - Run scripts feature interactive checkboxes: select specific services without editing compose files
 

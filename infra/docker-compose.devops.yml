@@ -102,15 +102,15 @@ services:
 volumes:
   prometheus_data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-prometheus-data
+    name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-prometheus-data
   grafana_data:
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-grafana-data
+    name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-grafana-data
   loki_data:       # Volume baru untuk data Loki
     driver: local
-    name: ${APP_SLUG:-app-boilerplate}-loki-data
+    name: ${SERVICE_SERVER_SLUG:-app-boilerplate}-loki-data
 
 networks:
   app_network:
-    name: ${APP_NETWORK:-app_boilerplate_network}
+    name: ${SERVICE_NETWORK:-app_boilerplate_network}
     external: true

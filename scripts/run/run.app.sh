@@ -12,13 +12,13 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# --- Load APP_SLUG dari .env ---
+# --- Load SERVICE_SERVER_SLUG dari .env ---
 DEFAULT_APP_SLUG="app-boilerplate"
 if [ -f .env ]; then
-    ENV_SLUG=$(grep -E '^APP_SLUG=' .env | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
+    ENV_SLUG=$(grep -E '^SERVICE_SERVER_SLUG=' .env | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
     [ -n "$ENV_SLUG" ] && DEFAULT_APP_SLUG="$ENV_SLUG"
 elif [ -f .env.example ]; then
-    ENV_SLUG=$(grep -E '^APP_SLUG=' .env.example | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
+    ENV_SLUG=$(grep -E '^SERVICE_SERVER_SLUG=' .env.example | cut -d '=' -f 2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" | tr -d '\r')
     [ -n "$ENV_SLUG" ] && DEFAULT_APP_SLUG="$ENV_SLUG"
 fi
 

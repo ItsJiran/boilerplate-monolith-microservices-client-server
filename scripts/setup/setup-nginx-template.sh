@@ -130,12 +130,12 @@ append_lb_block() {
   local service="$2"
   local domain="$3"
 
-  local app_service="${APP_SERVICE:-app}"
-  local app_port="${APP_PORT:-8000}"
+  local app_service="${SERVICE_DEFAULT_TARGET:-app}"
+  local app_port="${SERVICE_SERVER_PORT:-8000}"
   local minio_service="${MINIO_SERVICE:-minio}"
   local minio_port="${MINIO_PORT:-9000}"
   local minio_console_port="${MINIO_CONSOLE_PORT:-9001}"
-  local reverb_server_port="${REVERB_SERVER_PORT:-18080}"
+  local reverb_server_port="${SERVICE_REVERB_SERVER_PORT:-18080}"
 
   if [ "$FORCE_APPEND" -ne 1 ] && grep -qE "^[[:space:]]*server_name[[:space:]]+${domain}[;[:space:]]" "$file"; then
     echo -e "${YELLOW}[SKIP]${NC} Domain '$domain' already exists in $file"
@@ -314,12 +314,12 @@ fi
 
 if [ -z "$DOMAIN" ]; then
   case "$SERVICE" in
-    app) DOMAIN="${APP_DOMAIN:-}" ;;
-    hmr) DOMAIN="${HMR_URL:-}" ;;
-    s3) DOMAIN="${S3_DOMAIN:-${S3_URL:-}}" ;;
-    s3-console) DOMAIN="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-}}" ;;
-    pma) DOMAIN="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-${PHPMYADMIN_URL:-}}}" ;;
-    reverb) DOMAIN="${REVERB_DOMAIN:-${REVERB_URL:-}}" ;;
+    app) DOMAIN="${SERVICE_SERVER_DOMAIN:-}" ;;
+    hmr) DOMAIN="${SERVICE_HMR_URL:-}" ;;
+    s3) DOMAIN="${SERVICE_S3_DOMAIN:-${S3_URL:-}}" ;;
+    s3-console) DOMAIN="${SERVICE_S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-}}" ;;
+    pma) DOMAIN="${SERVICE_PMA_DOMAIN:-${SERVICE_PMA_ABSOLUTE_URI:-${PHPMYADMIN_URL:-}}}" ;;
+    reverb) DOMAIN="${SERVICE_REVERB_DOMAIN:-${SERVICE_REVERB_URL:-}}" ;;
   esac
 fi
 

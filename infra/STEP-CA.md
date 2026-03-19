@@ -256,7 +256,7 @@ docker run --rm -v step-ca-data:/data -v $(pwd):/backup \
 
 3. Verify network exists:
    ```bash
-   docker network inspect ${APP_NETWORK:-app_boilerplate_network}
+   docker network inspect ${SERVICE_NETWORK:-app_boilerplate_network}
    ```
 
 ### Certificate Verification Failed

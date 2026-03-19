@@ -202,7 +202,7 @@ server {
 
 ```bash
 # Production SSL Configuration
-APP_ENV=production
+SERVICE_SERVER_ENV=production
 USE_SSL=true
 SSL_PROVIDER=letsencrypt
 

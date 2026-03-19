@@ -6,9 +6,29 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs"
+    },
+    "./realtime": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./api": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./store": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./schema": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
     },
     "./tailwind.config": "./src/config/tailwind.config.ts"
   },
@@ -23,6 +43,9 @@
     "zod": "^3.22.4",
     "zustand": "^4.5.2",
     "@tanstack/react-query": "^5.0.0",
+    "laravel-echo": "^1.16.1",
+    "pusher-js": "^8.4.0",
+    "socket.io-client": "^4.8.1",
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.1"
   },
@@ -30,6 +53,7 @@
     "react": "^18.0.0"
   },
   "devDependencies": {
+    "@types/react": "^18.3.1",
     "tsup": "^8.0.2",
     "typescript": "^5.3.3",
     "tailwindcss": "^3.4.1",

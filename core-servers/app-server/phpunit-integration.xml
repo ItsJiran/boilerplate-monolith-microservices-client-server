@@ -15,7 +15,7 @@
         </include>
     </source>
     <php>
-        <env name="APP_ENV" value="testing"/>
+        <env name="SERVICE_SERVER_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         
@@ -40,12 +40,12 @@
 
         <!-- REVERB (Real Service) -->
         <env name="BROADCAST_CONNECTION" value="reverb"/>
-        <env name="REVERB_APP_ID" value="794379"/>
-        <env name="REVERB_APP_KEY" value="pyrghf57am4rz3nxssow"/>
-        <env name="REVERB_APP_SECRET" value="xufjdoxfovytixbqcibq"/>
-        <env name="REVERB_HOST" value="127.0.0.1"/>
-        <env name="REVERB_PORT" value="8080"/>
-        <env name="REVERB_SCHEME" value="http"/>
+        <env name="SERVICE_REVERB_APP_ID" value="794379"/>
+        <env name="SERVICE_REVERB_APP_KEY" value="pyrghf57am4rz3nxssow"/>
+        <env name="SERVICE_REVERB_APP_SECRET" value="xufjdoxfovytixbqcibq"/>
+        <env name="SERVICE_REVERB_HOST" value="127.0.0.1"/>
+        <env name="SERVICE_REVERB_PORT" value="8080"/>
+        <env name="SERVICE_REVERB_SCHEME" value="http"/>
         
         <!-- USE REAL DB (Host: 127.0.0.1, Port: 33080->3306) -->
         <env name="DB_CONNECTION" value="mysql"/>

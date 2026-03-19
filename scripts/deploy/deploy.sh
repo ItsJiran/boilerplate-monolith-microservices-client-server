@@ -43,11 +43,11 @@ echo -e "${YELLOW}[1/5] Updating configuration and scripts...${NC}"
 # 2. Setup Environment Variables
 echo -e "${YELLOW}[2/5] Setting up environment variables...${NC}"
 
-# Pre-scan arguments for APP_ENV to determine which config to load
+# Pre-scan arguments for SERVICE_SERVER_ENV to determine which config to load
 TARGET_ENV="production"
 for arg in "$@"; do
   case $arg in
-    --APP_ENV=*)
+    --SERVICE_SERVER_ENV=*)
       TARGET_ENV="${arg#*=}"
       ;;
   esac

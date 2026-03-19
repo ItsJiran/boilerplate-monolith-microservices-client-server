@@ -23,14 +23,14 @@ class ListActiveChannelsCommand extends Command
     public function handle()
     {
         try {
-            $key = config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY');
-            $secret = config('broadcasting.connections.reverb.secret') ?? env('REVERB_APP_SECRET');
-            $appId = config('broadcasting.connections.reverb.app_id') ?? env('REVERB_APP_ID');
+            $key = config('broadcasting.connections.reverb.key') ?? env('SERVICE_REVERB_APP_KEY');
+            $secret = config('broadcasting.connections.reverb.secret') ?? env('SERVICE_REVERB_APP_SECRET');
+            $appId = config('broadcasting.connections.reverb.app_id') ?? env('SERVICE_REVERB_APP_ID');
             
             // FIX: Force the connection to use the internal Docker network.
             // We bypass Nginx entirely and talk container-to-container on HTTP.
-            $host = env('REVERB_SERVER_HOST', 'reverb'); 
-            $port = env('REVERB_SERVER_PORT', env('REVERB_PORT', 8080)); 
+            $host = env('SERVICE_REVERB_SERVER_HOST', 'reverb'); 
+            $port = env('SERVICE_REVERB_SERVER_PORT', env('SERVICE_REVERB_PORT', 8080)); 
             $scheme = env('REVERB_SERVER_SCHEME', 'http'); 
 
             if (!$key || !$secret || !$appId) {

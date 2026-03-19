@@ -12,7 +12,7 @@ export type PageContextServer = {
       description?: string;
     };
   };
-  headers?: Record<string, string>;
+  headers?: Record<string, string | undefined>;
   user?: {
     name: string;
     email: string;

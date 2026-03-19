@@ -1,6 +1,6 @@
 // src/api/hooks.ts
 import { useState, useCallback } from 'react';
-import client, { api } from './client';
+import { api } from './client';
 import { AxiosError, AxiosRequestConfig } from 'axios';
 
 // Generic hook to fetch data

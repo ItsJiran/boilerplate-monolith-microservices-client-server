@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('REVERB_SERVER', 'reverb'),
+    'default' => env('SERVICE_REVERB_SERVER', 'reverb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,10 +29,10 @@ return [
     'servers' => [
 
         'reverb' => [
-            'host' => env('REVERB_SERVER_HOST', '0.0.0.0'),
-            'port' => env('REVERB_SERVER_PORT', 8085),
+            'host' => env('SERVICE_REVERB_SERVER_HOST', '0.0.0.0'),
+            'port' => env('SERVICE_REVERB_SERVER_PORT', 8085),
             'path' => env('REVERB_SERVER_PATH', ''),
-            'hostname' => env('REVERB_HOST'),
+            'hostname' => env('SERVICE_REVERB_HOST'),
             'options' => [
                 'tls' => [],
             ],
@@ -73,15 +73,15 @@ return [
 
         'apps' => [
             [
-                'key' => env('REVERB_APP_KEY'),
-                'secret' => env('REVERB_APP_SECRET'),
-                'id' => env('REVERB_APP_ID'),
-                'app_id' => env('REVERB_APP_ID'),
+                'key' => env('SERVICE_REVERB_APP_KEY'),
+                'secret' => env('SERVICE_REVERB_APP_SECRET'),
+                'id' => env('SERVICE_REVERB_APP_ID'),
+                'app_id' => env('SERVICE_REVERB_APP_ID'),
                 'options' => [
-                    'host' => env('REVERB_HOST'),
-                    'port' => env('REVERB_PORT', 443),
-                    'scheme' => env('REVERB_SCHEME', 'https'),
-                    'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                    'host' => env('SERVICE_REVERB_HOST'),
+                    'port' => env('SERVICE_REVERB_PORT', 443),
+                    'scheme' => env('SERVICE_REVERB_SCHEME', 'https'),
+                    'useTLS' => env('SERVICE_REVERB_SCHEME', 'https') === 'https',
                 ],
                 'allowed_origins' => ['*'],
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),

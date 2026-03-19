@@ -151,7 +151,7 @@ append_host_block() {
   cert="${cert_and_key%%|*}"
   key="${cert_and_key#*|}"
 
-  local lb_port="${LOAD_BALANCER_PORT:-80}"
+  local lb_port="${SERVICE_LOAD_BALANCER_PORT:-80}"
   local grafana_port="${GRAFANA_PORT:-3000}"
 
   {
@@ -227,13 +227,13 @@ fi
 
 if [ -z "$DOMAIN" ]; then
   case "$SERVICE" in
-    app) DOMAIN="${APP_DOMAIN:-}" ;;
-    pma) DOMAIN="${PMA_DOMAIN:-${PMA_ABSOLUTE_URI:-${PHPMYADMIN_URL:-}}}" ;;
-    s3) DOMAIN="${S3_DOMAIN:-${S3_URL:-}}" ;;
-    s3-console) DOMAIN="${S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-}}" ;;
+    app) DOMAIN="${SERVICE_SERVER_DOMAIN:-}" ;;
+    pma) DOMAIN="${SERVICE_PMA_DOMAIN:-${SERVICE_PMA_ABSOLUTE_URI:-${PHPMYADMIN_URL:-}}}" ;;
+    s3) DOMAIN="${SERVICE_S3_DOMAIN:-${S3_URL:-}}" ;;
+    s3-console) DOMAIN="${SERVICE_S3_CONSOLE_DOMAIN:-${S3_CONSOLE_URL:-}}" ;;
     grafana) DOMAIN="${GRAFANA_URL:-}" ;;
-    reverb) DOMAIN="${REVERB_DOMAIN:-${REVERB_URL:-}}" ;;
-    hmr) DOMAIN="${HMR_URL:-}" ;;
+    reverb) DOMAIN="${SERVICE_REVERB_DOMAIN:-${SERVICE_REVERB_URL:-}}" ;;
+    hmr) DOMAIN="${SERVICE_HMR_URL:-}" ;;
   esac
 fi
 
@@ -248,6 +248,6 @@ esac
 init_host_template_if_missing "$OUTPUT_FILE"
 append_host_block "$OUTPUT_FILE" "$SERVICE" "$DOMAIN"
 
-HOST_FILE_NAME="${HOST_FILE_NAME:-${APP_DOMAIN:-$DOMAIN}}"
+HOST_FILE_NAME="${HOST_FILE_NAME:-${SERVICE_SERVER_DOMAIN:-$DOMAIN}}"
 upsert_env_reference "$ROOT_DIR/.env.devops" "NGINX_HOST_FILE_NAME" "$HOST_FILE_NAME"
 upsert_env_reference "$ROOT_DIR/.env.devops" "NGINX_SSL_MODE" "$SSL_MODE"

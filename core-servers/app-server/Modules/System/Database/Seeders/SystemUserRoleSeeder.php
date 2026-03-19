@@ -40,7 +40,7 @@ class SystemUserRoleSeeder extends Seeder
 
     private function resolveDomain(): string
     {
-        $appUrl = env('APP_URL', 'http://localhost');
+        $appUrl = env('SERVICE_SERVER_URL', 'http://localhost');
         $host = parse_url($appUrl, PHP_URL_HOST);
 
         if (!$host) {

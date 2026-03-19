@@ -12,27 +12,22 @@ export function Page() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Simulate real auth flow
-      // 1. Get CSRF first (Laravel Sanctum)
       await api.get('/sanctum/csrf-cookie');
-      
-      // 2. Login
-      const response = await api.post('/login', { email, password });
-      
-      // 3. Update store
-      login(response.data.token, response.data.user);
-      
-      // 4. Redirect home
+
+      const response = await api.post<{ data?: { token?: string; user?: unknown }; token?: string; user?: unknown }>(
+        '/login',
+        { email, password }
+      );
+
+      const token = response?.data?.token ?? response?.token ?? null;
+      const user = response?.data?.user ?? response?.user ?? null;
+      if (token && user) {
+        login(token, user);
+      }
+
       window.location.href = '/';
     } catch (err: any) {
-        // Fallback for demo if backend is offline
-        // Set a cookie manually to spoof session
-        document.cookie = "mock_auth=true; path=/";
-        window.location.href = '/';
-        return;
-
-      // Original error handling
-      // setError(err.response?.data?.message || 'Login failed');
+      setError(err?.response?.data?.message || 'Login failed');
     }
   };
 
@@ -51,7 +46,7 @@ export function Page() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
         <button type="submit">Login</button>
       </form>
-      <p>Use demo@example.com / password for demo logic if API is down.</p>
+      <p>Sign in using your backend credentials.</p>
     </div>
   );
 }

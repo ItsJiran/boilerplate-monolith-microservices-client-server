@@ -107,7 +107,7 @@ fi
 
 # Default fallback: app domain only
 if [ ${#DOMAINS[@]} -eq 0 ]; then
-    add_domain_unique "${APP_DOMAIN}"
+    add_domain_unique "${SERVICE_SERVER_DOMAIN}"
 fi
 
 PRIMARY_DOMAIN="${DOMAINS[0]}"
